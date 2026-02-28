@@ -14,6 +14,7 @@ export type Result = {
     __kind__: "error";
     error: string;
 };
+export type AccountIdentifier = Uint8Array;
 export interface SubscriptionRecord {
     status: Variant_active_expired_pending;
     paidAmount: bigint;
@@ -58,7 +59,7 @@ export interface backendInterface {
         invalidBlock: bigint;
     } | {
         __kind__: "wrongAddress";
-        wrongAddress: string;
+        wrongAddress: AccountIdentifier;
     } | {
         __kind__: "alreadySubscribed";
         alreadySubscribed: null;

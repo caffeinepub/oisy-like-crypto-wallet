@@ -1,32 +1,14 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-28T09:44:11.148Z",
-  "summary": "The diff modifies backend/main.mo to fix the verifyAndActivateSubscription function and updates frontend hooks for result variant handling. The backend changes include new ICP Ledger type definitions (AccountIdentifier, Tokens, Transfer, Operation, Transaction, Block, QueryBlocksResponse) and descriptive error variants. The frontend useQueries.ts adds a parseVerifyResult helper handling all backend result variants. Most REQ-32 requirements appear addressed, but the diff is truncated so some details cannot be fully confirmed.",
-  "missing_requirements": [
-    {
-      "id": "REQ-32",
-      "requirement": "Verify that the destination account comparison correctly converts the canister's treasury Account ID (derived from the canister's own principal) to the same binary/text format used in the ledger block's `to` field.",
-      "reason": "The diff is truncated and the account ID comparison logic in verifyAndActivateSubscription cannot be confirmed from the visible portion of backend/main.mo. The Operation type definition starts to appear but is cut off before the full function body is visible.",
-      "evidence": [
-        "backend/main.mo"
-      ]
-    }
-  ],
-  "hallucinated_features": [
-    {
-      "description": "Frontend useQueries.ts adds a useVerifyAndActivateSubscription mutation with a parseVerifyResult helper that handles an 'exceedsMaximumSubscriptionTime' result variant.",
-      "reason": "The 'exceedsMaximumSubscriptionTime' variant was not mentioned in REQ-32 or its acceptance criteria. The build request only specifies: 'Block not found', 'Transfer amount insufficient', 'Wrong destination address', 'Subscription already active'. Additionally, frontend changes are explicitly listed as a non-goal in the build request.",
-      "evidence": [
-        "frontend/src/hooks/useQueries.ts"
-      ]
-    }
-  ],
-  "confidence": 0.62,
+  "generatedAt": "2026-02-28T10:52:45.021Z",
+  "summary": "The diff modifies frontend/src/pages/SubscriptionPage.tsx along with supporting files. The SubscriptionPage.tsx file is truncated in the diff, so full verification of all acceptance criteria is limited. Based on what is visible, the file imports new icons (Hash, Info) suggesting UI additions consistent with helper text or tooltip implementation. The file-summaries.txt does not explicitly describe the label or helper text changes in SubscriptionPage.tsx. The truncation prevents full confirmation of all AC items.",
+  "missing_requirements": [],
+  "hallucinated_features": [],
+  "confidence": 0.5,
   "changed_files": [
-    "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/SubscriptionPage.tsx",
     "project_state.json"
   ]
 }

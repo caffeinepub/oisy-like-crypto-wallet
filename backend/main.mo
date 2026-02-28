@@ -164,6 +164,9 @@ actor {
     query_blocks : shared query (GetBlocksArgs) -> async QueryBlocksResponse;
   } = actor ("ryjl3-tyaaa-aaaaa-aaaba-cai");
 
+  // Constants for fixed treasury address.
+  let treasuryAddressId : AccountIdentifier = "\156853c40cb612680accef359c70d569cc9cd60453f5b055bf69e4ce87cf67a5";
+
   // Verify and activate subscription using an ICP Ledger block.
   public shared ({ caller }) func verifyAndActivateSubscription(blockIndex : Nat) : async {
     #ok : Text;
@@ -172,7 +175,7 @@ actor {
     #insufficientAmount : Text;
     #exceedsMaximumSubscriptionTime : Text;
     #alreadySubscribed;
-    #wrongAddress : Text;
+    #wrongAddress : AccountIdentifier;
   } {
     // Only authenticated (non-guest) users may verify and activate a subscription.
     if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
@@ -211,6 +214,10 @@ actor {
     let transfer : Transfer = switch (block.transaction.operation) {
       case (? #Transfer(t)) { t };
       case (_) { return #invalidBlock(2) };
+    };
+
+    if (transfer.to != treasuryAddressId) {
+      return #wrongAddress(treasuryAddressId);
     };
 
     // Verify the amount is at least 100,000 e8s (0.001 ICP).

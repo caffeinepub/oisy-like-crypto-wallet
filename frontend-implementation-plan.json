@@ -1,6 +1,25 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix verifyAndActivateSubscription block parsing logic in backend",
-  "requirements": []
+  "title": "Update subscription verification UI to clarify Block Index input label",
+  "requirements": [
+    {
+      "id": "REQ-35",
+      "summary": "Update the Block Index input field label, placeholder, and helper text in SubscriptionPage.tsx to clearly explain that users should enter 'The index of the transaction in the ICP ledger' from their wallet transaction history, replacing the previous 'Block Index' label with user-friendly descriptive text.",
+      "acceptanceCriteria": [
+        "The Block Index input field on SubscriptionPage.tsx displays the label text 'The index of the transaction in the ICP ledger.' (or a clearly derived equivalent such as 'Transaction Index in ICP Ledger').",
+        "Any previous plain 'Block Index' label text is replaced with the new descriptive label.",
+        "Helper text or a tooltip beneath the input clarifies that this value can be found in the user's ICP wallet transaction history (e.g. NNS App, ICP Dashboard).",
+        "The input still accepts a numeric value (the transaction/block index), and the 'Verify & Activate' button behavior is unchanged.",
+        "The visual style matches the existing dark fintech glassmorphism theme."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/SubscriptionPage.tsx",
+          "operation": "modify",
+          "description": "Update the Block Index input field in the subscription verification section: Replace the label from 'Block Index' to 'Transaction Index in ICP Ledger' or 'The index of the transaction in the ICP ledger.'; update the placeholder text to guide users (e.g., 'Enter transaction index from your ICP wallet'); add or update helper text below the input explaining where to find this value (e.g., 'Find this in your ICP wallet transaction history (NNS App, ICP Dashboard, etc.)'). Ensure the input still accepts numeric values and the 'Verify & Activate' button behavior remains unchanged. Maintain the existing dark fintech glassmorphism styling and card layout."
+        }
+      ]
+    }
+  ]
 }

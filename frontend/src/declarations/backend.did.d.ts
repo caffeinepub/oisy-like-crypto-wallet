@@ -10,6 +10,7 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export type AccountIdentifier = Uint8Array;
 export type Result = { 'ok' : SubscriptionRecord } |
   { 'error' : string };
 export interface SubscriptionRecord {
@@ -67,7 +68,7 @@ export interface _SERVICE {
       { 'insufficientAmount' : string } |
       { 'blockNotFound' : bigint } |
       { 'invalidBlock' : bigint } |
-      { 'wrongAddress' : string } |
+      { 'wrongAddress' : AccountIdentifier } |
       { 'alreadySubscribed' : null } |
       { 'exceedsMaximumSubscriptionTime' : string }
   >,

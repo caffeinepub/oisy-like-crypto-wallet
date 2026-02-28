@@ -1,42 +1,38 @@
 {
   "kind": "build_request",
-  "title": "Fix verifyAndActivateSubscription block parsing logic in backend",
-  "priority": "high",
+  "title": "Update subscription verification UI to clarify Block Index input label",
+  "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-32",
-      "text": "Fix the `verifyAndActivateSubscription` function in `backend/main.mo` so that it correctly detects and validates ICP transfer operations in a given block. The current implementation returns 'Block does not contain a transfer operation' even when a valid ICP transfer exists in the block. Specifically: (1) Review the ICP Ledger `query_blocks` response structure and ensure the block's transaction type field is accessed by the correct field name — the ICP Ledger returns blocks with a `transaction` field containing an `operation` variant that may be `#Transfer`, `#Mint`, `#Burn`, or `#Approve`; the code must match the exact Motoko variant tag used in the decoded response. (2) Ensure the inter-canister call to the ICP Ledger canister (`ryjl3-tyaaa-aaaaa-aaaba-cai`) uses the correct method (`query_blocks`) and the request/response types are fully and correctly typed in the Motoko actor type definition — missing or misnamed fields in the type annotation cause silent decoding failures that make operation fields appear absent. (3) Verify that the destination account comparison correctly converts the canister's treasury Account ID (derived from the canister's own principal) to the same binary/text format used in the ledger block's `to` field. (4) Confirm the amount threshold check uses `>= 100_000` e8s (0.001 ICP). (5) Add descriptive error variants so failures return meaningful messages such as 'Block not found', 'Transfer amount insufficient', 'Wrong destination address', or 'Already subscribed' instead of the generic 'Block does not contain a transfer operation'.",
-      "target": "backend",
+      "id": "REQ-35",
+      "text": "In frontend/src/pages/SubscriptionPage.tsx, update the Block Index input field so that its label, placeholder, and helper text clearly read 'The index of the transaction in the ICP ledger.' (or equivalent user-friendly wording derived from that phrase). Replace any label text that previously said 'Block Index' with this descriptive label so users understand exactly what value to enter after completing their ICP transfer.",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-recent"
+          "msg-latest"
         ],
         "quotes": [
-          "Block does not contain a transfer operation.",
-          "说明验证时有问题，并没有检测到转账交易"
+          "如何改成\"The index of the transaction in the ICP ledger.\"来验证交易",
+          "交易记录里只有The index of the transaction in the ICP ledger."
         ]
       },
       "acceptanceCriteria": [
-        "After a user sends exactly 0.001 ICP (100,000 e8s) to the treasury address and obtains the block index, calling `verifyAndActivateSubscription(blockIndex)` with that block index succeeds and marks the subscription as active.",
-        "The function correctly identifies a `#Transfer` operation in the ICP Ledger block response without returning 'Block does not contain a transfer operation'.",
-        "The ICP Ledger inter-canister type definition in main.mo includes all required fields for the `QueryBlocksResponse`, `Block`, `Transaction`, and `Operation` types with correct Motoko field names.",
-        "The treasury account ID comparison in the verification logic uses a consistent format matching what the ICP Ledger stores as the `to` field.",
-        "Amount check verifies the transfer amount is >= 100,000 e8s before marking the subscription active.",
-        "Failure cases return descriptive error strings: 'Block not found', 'Transfer amount insufficient', 'Wrong destination address', 'Subscription already active'.",
-        "Existing `recordPayment` function is not broken by this change."
+        "The Block Index input field on SubscriptionPage.tsx displays the label text 'The index of the transaction in the ICP ledger.' (or a clearly derived equivalent such as 'Transaction Index in ICP Ledger').",
+        "Any previous plain 'Block Index' label text is replaced with the new descriptive label.",
+        "Helper text or a tooltip beneath the input clarifies that this value can be found in the user's ICP wallet transaction history (e.g. NNS App, ICP Dashboard).",
+        "The input still accepts a numeric value (the transaction/block index), and the 'Verify & Activate' button behavior is unchanged.",
+        "The visual style matches the existing dark fintech glassmorphism theme."
       ]
     }
   ],
   "constraints": [
-    "Do not change the subscription fee threshold — it must remain 100,000 e8s (0.001 ICP).",
-    "Do not modify any frontend immutable paths.",
-    "The ICP Ledger canister ID must remain `ryjl3-tyaaa-aaaaa-aaaba-cai`.",
-    "The existing `recordPayment` function must be preserved for backward compatibility."
+    "Do not change the backend verifyAndActivateSubscription function signature or logic — it still accepts a block index (Nat/bigint).",
+    "Do not modify any immutable frontend paths (useInternetIdentity.ts, useActor.ts, main.tsx, components/ui)."
   ],
   "nonGoals": [
-    "Do not change any frontend UI components or pages as part of this fix.",
-    "Do not implement a new subscription flow or change the Plan A UX.",
-    "Do not add new backend functions unrelated to the block verification fix."
+    "Switching the verification mechanism from block index to transaction hash.",
+    "Changes to the backend Motoko actor.",
+    "Changes to any other pages or components outside SubscriptionPage.tsx."
   ],
   "imageRequirements": {
     "required": [],

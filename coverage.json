@@ -1,35 +1,34 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-28T09:44:11.153Z",
+  "generatedAt": "2026-02-28T10:52:45.025Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
     "total": 1,
-    "implemented": 0,
+    "implemented": 1,
     "items": [
       {
-        "id": "REQ-32",
-        "summary": "Fix the `verifyAndActivateSubscription` function in `backend/main.mo` so that it correctly detects and validates ICP transfer operations in a given block. The current implementation returns 'Block does not contain a transfer operation' even when a valid ICP transfer exists in the block. Specifically: (1) Review the ICP Ledger `query_blocks` response structure and ensure the block's transaction type field is accessed by the correct field name — the ICP Ledger returns blocks with a `transaction` field containing an `operation` variant that may be `#Transfer`, `#Mint`, `#Burn`, or `#Approve`; the code must match the exact Motoko variant tag used in the decoded response. (2) Ensure the inter-canister call to the ICP Ledger canister (`ryjl3-tyaaa-aaaaa-aaaba-cai`) uses the correct method (`query_blocks`) and the request/response types are fully and correctly typed in the Motoko actor type definition — missing or misnamed fields in the type annotation cause silent decoding failures that make operation fields appear absent. (3) Verify that the destination account comparison correctly converts the canister's treasury Account ID (derived from the canister's own principal) to the same binary/text format used in the ledger block's `to` field. (4) Confirm the amount threshold check uses `>= 100_000` e8s (0.001 ICP). (5) Add descriptive error variants so failures return meaningful messages such as 'Block not found', 'Transfer amount insufficient', 'Wrong destination address', or 'Already subscribed' instead of the generic 'Block does not contain a transfer operation'.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
+        "id": "REQ-35",
+        "summary": "In frontend/src/pages/SubscriptionPage.tsx, update the Block Index input field so that its label, placeholder, and helper text clearly read 'The index of the transaction in the ICP ledger.' (or equivalent user-friendly wording derived from that phrase). Replace any label text that previously said 'Block Index' with this descriptive label so users understand exactly what value to enter after completing their ICP transfer.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/SubscriptionPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/SubscriptionPage.tsx"
+        ]
       }
     ]
   },
   "changedFiles": [
-    "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
-    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/SubscriptionPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

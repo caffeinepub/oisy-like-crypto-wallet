@@ -1,4 +1,25 @@
 {
   "kind": "feature_evidence_report",
-  "features": []
+  "features": [
+    {
+      "featureId": "feature-in-frontend-src-pages-subscriptionpage-tsx-update-the-block-index-input-field-so-that-its-label-placeholder-and-helper-text-clearly-read-the-index-of-the-transaction-in-the-icp-ledger-or-equivalent-user-friendly-wording-derived-from-that-phrase-replace-any-label-text-that-previously-said-block-index-with-this-descriptive-label-so-users-understand-exactly-what-value-to-enter-after-completing-their-icp-transfer",
+      "featureTitle": "In frontend/src/pages/SubscriptionPage.tsx, update the Block Index input field so that its label, placeholder, and helper text clearly read 'The index of the transaction in the ICP ledger.' (or equivalent user-friendly wording derived from that phrase). Replace any label text that previously said 'Block Index' with this descriptive label so users understand exactly what value to enter after completing their ICP transfer.",
+      "files": [
+        "frontend/src/pages/SubscriptionPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-35"
+      ],
+      "confidence": "high"
+    }
+  ]
 }

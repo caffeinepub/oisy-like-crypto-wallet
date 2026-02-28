@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 19,
+  "projectStateVersion": 23,
   "summary": "Building a crypto wallet DApp similar to Oisy Wallet on Internet Computer, with Internet Identity authentication, multi-chain asset viewing, ERC20 token management, address monitoring, real-time balance queries, a whitelist address book, and a transparent paid subscription/access-control system using ICP smart contracts. Also distinguishing ICP native addresses (Account ID) from ICP contract token addresses (Principal ID). Subscription fee is 0.001 ICP. Subscription verification uses Plan A: user manually transfers ICP via external wallet, enters the Block Index on the subscription page, and the backend verifies the block against ICP Ledger to activate the subscription.",
   "architectural_notes": [
     "基于 Internet Computer (ICP) 区块链平台构建全栈 DApp",
@@ -12,7 +12,7 @@
     "Internet Identity 登录账户无法从前端直接发起 ICP Ledger 转账，需要用户通过外部钱包（如 NNS App）完成链上转账",
     "`verifyAndActivateSubscription` returns 'Block does not contain a transfer operation' even when user has completed a valid ICP transfer to the treasury address — block parsing logic in backend/main.mo is not correctly detecting transfer operations"
   ],
-  "isFixRequest": true,
+  "isFixRequest": false,
   "existing_features": [
     {
       "id": "feature-implement-internet-identity-authentication-allow-users-to-log-in-and-log-out-using-internet-identity-display-the-user-s-principal-id-after-login-gate-all-wallet-features-behind-authentication",
@@ -229,6 +229,22 @@
         "REQ-30"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-in-frontend-src-pages-subscriptionpage-tsx-replace-the-displayed-treasury-receiving-address-with-156853c40cb612680accef359c70d569cc9cd60453f5b055bf69e4ce87cf67a5-this-address-must-appear-in-the-prominently-labeled-treasury-card-and-in-the-step-by-step-instructions-telling-users-where-to-send-their-0-001-icp",
+      "title": "In frontend/src/pages/SubscriptionPage.tsx, replace the displayed treasury receiving address with `156853c40cb612680accef359c70d569cc9cd60453f5b055bf69e4ce87cf67a5`. This address must appear in the prominently labeled treasury card and in the step-by-step instructions telling users where to send their 0.001 ICP.",
+      "reqIds": [
+        "REQ-34"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-frontend-src-pages-subscriptionpage-tsx-update-the-block-index-input-field-so-that-its-label-placeholder-and-helper-text-clearly-read-the-index-of-the-transaction-in-the-icp-ledger-or-equivalent-user-friendly-wording-derived-from-that-phrase-replace-any-label-text-that-previously-said-block-index-with-this-descriptive-label-so-users-understand-exactly-what-value-to-enter-after-completing-their-icp-transfer",
+      "title": "In frontend/src/pages/SubscriptionPage.tsx, update the Block Index input field so that its label, placeholder, and helper text clearly read 'The index of the transaction in the ICP ledger.' (or equivalent user-friendly wording derived from that phrase). Replace any label text that previously said 'Block Index' with this descriptive label so users understand exactly what value to enter after completing their ICP transfer.",
+      "reqIds": [
+        "REQ-35"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -353,6 +369,20 @@
       "summary": "Fix the `verifyAndActivateSubscription` function in `backend/main.mo` so that it correctly detects and validates ICP transfer operations in a given block. The current implementation returns 'Block does not contain a transfer operation' even when a valid ICP transfer exists in the block. Specifically: (1) Review the ICP Ledger `query_blocks` response structure and ensure the block's transaction type field is accessed by the correct field name — the ICP Ledger returns blocks with a `transaction` field containing an `operation` variant that may be `#Transfer`, `#Mint`, `#Burn`, or `#Approve`; the code must match the exact Motoko variant tag used in the decoded response. (2) Ensure the inter-canister call to the ICP Ledger canister (`ryjl3-tyaaa-aaaaa-aaaba-cai`) uses the correct method (`query_blocks`) and the request/response types are fully and correctly typed in the Motoko actor type definition — missing or misnamed fields in the type annotation cause silent decoding failures that make operation fields appear absent. (3) Verify that the destination account comparison correctly converts the canister's treasury Account ID (derived from the canister's own principal) to the same binary/text format used in the ledger block's `to` field. (4) Confirm the amount threshold check uses `>= 100_000` e8s (0.001 ICP). (5) Add descriptive error variants so failures return meaningful messages such as 'Block not found', 'Transfer amount insufficient', 'Wrong destination address', or 'Already subscribed' instead of the generic 'Block does not contain a transfer operation'.",
       "reqIds": [
         "REQ-32"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-21",
+      "summary": "Change the canister treasury address to '156853c40cb612680accef359c70d569cc9cd60453f5b055bf69e4ce87cf67a5' in the backend and frontend subscription page.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-22",
+      "summary": "In backend/main.mo, replace the hardcoded treasury Account ID used in `verifyAndActivateSubscription` (and any other subscription-related functions that reference the treasury address) with the new address: `156853c40cb612680accef359c70d569cc9cd60453f5b055bf69e4ce87cf67a5`. Remove any dynamic derivation of the treasury address from the canister's own principal and use this fixed 64-character hex string as a constant instead.",
+      "reqIds": [
+        "REQ-33"
       ],
       "status": "pending"
     }

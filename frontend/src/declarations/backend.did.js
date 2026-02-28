@@ -42,6 +42,7 @@ export const Result = IDL.Variant({
   'ok' : SubscriptionRecord,
   'error' : IDL.Text,
 });
+export const AccountIdentifier = IDL.Vec(IDL.Nat8);
 
 export const idlService = IDL.Service({
   '_caffeineStorageBlobIsLive' : IDL.Func(
@@ -92,7 +93,7 @@ export const idlService = IDL.Service({
           'insufficientAmount' : IDL.Text,
           'blockNotFound' : IDL.Nat,
           'invalidBlock' : IDL.Nat,
-          'wrongAddress' : IDL.Text,
+          'wrongAddress' : AccountIdentifier,
           'alreadySubscribed' : IDL.Null,
           'exceedsMaximumSubscriptionTime' : IDL.Text,
         }),
@@ -135,6 +136,7 @@ export const idlFactory = ({ IDL }) => {
     'principalId' : IDL.Text,
   });
   const Result = IDL.Variant({ 'ok' : SubscriptionRecord, 'error' : IDL.Text });
+  const AccountIdentifier = IDL.Vec(IDL.Nat8);
   
   return IDL.Service({
     '_caffeineStorageBlobIsLive' : IDL.Func(
@@ -185,7 +187,7 @@ export const idlFactory = ({ IDL }) => {
             'insufficientAmount' : IDL.Text,
             'blockNotFound' : IDL.Nat,
             'invalidBlock' : IDL.Nat,
-            'wrongAddress' : IDL.Text,
+            'wrongAddress' : AccountIdentifier,
             'alreadySubscribed' : IDL.Null,
             'exceedsMaximumSubscriptionTime' : IDL.Text,
           }),

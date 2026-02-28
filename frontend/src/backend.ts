@@ -96,6 +96,7 @@ export type Result = {
     __kind__: "error";
     error: string;
 };
+export type AccountIdentifier = Uint8Array;
 export interface _CaffeineStorageRefillInformation {
     proposed_top_up_amount?: bigint;
 }
@@ -158,7 +159,7 @@ export interface backendInterface {
         invalidBlock: bigint;
     } | {
         __kind__: "wrongAddress";
-        wrongAddress: string;
+        wrongAddress: AccountIdentifier;
     } | {
         __kind__: "alreadySubscribed";
         alreadySubscribed: null;
@@ -167,7 +168,7 @@ export interface backendInterface {
         exceedsMaximumSubscriptionTime: string;
     }>;
 }
-import type { Result as _Result, SubscriptionRecord as _SubscriptionRecord, UserProfile as _UserProfile, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
+import type { AccountIdentifier as _AccountIdentifier, Result as _Result, SubscriptionRecord as _SubscriptionRecord, UserProfile as _UserProfile, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _caffeineStorageBlobIsLive(arg0: Uint8Array): Promise<boolean> {
@@ -408,7 +409,7 @@ export class Backend implements backendInterface {
         invalidBlock: bigint;
     } | {
         __kind__: "wrongAddress";
-        wrongAddress: string;
+        wrongAddress: AccountIdentifier;
     } | {
         __kind__: "alreadySubscribed";
         alreadySubscribed: null;
@@ -533,7 +534,7 @@ function from_candid_variant_n18(_uploadFile: (file: ExternalBlob) => Promise<Ui
 } | {
     invalidBlock: bigint;
 } | {
-    wrongAddress: string;
+    wrongAddress: _AccountIdentifier;
 } | {
     alreadySubscribed: null;
 } | {
@@ -552,7 +553,7 @@ function from_candid_variant_n18(_uploadFile: (file: ExternalBlob) => Promise<Ui
     invalidBlock: bigint;
 } | {
     __kind__: "wrongAddress";
-    wrongAddress: string;
+    wrongAddress: AccountIdentifier;
 } | {
     __kind__: "alreadySubscribed";
     alreadySubscribed: null;

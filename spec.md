@@ -1,14 +1,11 @@
 # Specification
 
 ## Summary
-**Goal:** Fix the `verifyAndActivateSubscription` function in `backend/main.mo` so it correctly parses ICP Ledger block responses and validates ICP transfer operations.
+**Goal:** Update the Block Index input field on the SubscriptionPage to use clearer, more descriptive labeling so users understand what value to enter after completing an ICP transfer.
 
 **Planned changes:**
-- Correct the Motoko actor type definition for the ICP Ledger (`ryjl3-tyaaa-aaaaa-aaaba-cai`) to include all required fields for `QueryBlocksResponse`, `Block`, `Transaction`, and `Operation` types with accurate field names
-- Fix the block parsing logic to correctly access the `transaction.operation` variant and match the `#Transfer` tag as returned by the ICP Ledger
-- Fix the treasury account ID comparison so it uses the same binary/text format as the `to` field stored in the ledger block
-- Ensure the amount check verifies the transfer is >= 100,000 e8s (0.001 ICP)
-- Replace the generic "Block does not contain a transfer operation" error with descriptive variants: "Block not found", "Transfer amount insufficient", "Wrong destination address", and "Subscription already active"
-- Preserve the existing `recordPayment` function without modification
+- Replace the "Block Index" label with descriptive text such as "Transaction Index in ICP Ledger" (derived from "The index of the transaction in the ICP ledger.")
+- Update the input placeholder to reflect the new descriptive label
+- Add helper text beneath the input clarifying that this value can be found in the user's ICP wallet transaction history (e.g. NNS App, ICP Dashboard)
 
-**User-visible outcome:** After sending 0.001 ICP to the treasury address and obtaining the block index, calling `verifyAndActivateSubscription(blockIndex)` will correctly detect the transfer and activate the subscription instead of returning a false-negative error.
+**User-visible outcome:** Users on the SubscriptionPage now see a clearly labeled input field that explains exactly what value to enter when verifying their ICP subscription payment, reducing confusion after completing a transfer.
