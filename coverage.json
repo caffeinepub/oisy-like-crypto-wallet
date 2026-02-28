@@ -1,0 +1,59 @@
+{
+  "kind": "coverage_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-28T07:55:43.392Z",
+  "sources": {
+    "buildRequest": true,
+    "implementationPlan": true
+  },
+  "requirements": {
+    "total": 2,
+    "implemented": 2,
+    "items": [
+      {
+        "id": "REQ-8",
+        "summary": "After a user logs in via Internet Identity, derive and display their ICP account address (Account ID / principal-based address) and a deterministic EVM-compatible wallet address (derived from the user's principal). Show both addresses prominently on the Dashboard page in clearly labeled cards with copy-to-clipboard buttons, so the user knows where to receive tokens.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/utils/addressDerivation.ts",
+          "frontend/src/components/WalletAddressCard.tsx",
+          "frontend/src/pages/DashboardPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/utils/addressDerivation.ts",
+          "frontend/src/components/WalletAddressCard.tsx",
+          "frontend/src/pages/DashboardPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-9",
+        "summary": "Pre-populate the 'Send' form's sender address fields and the Networks page's associated address column with the user's derived ICP and EVM addresses so they are consistently used across the app as the user's own send-from addresses.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/NetworksPage.tsx",
+          "frontend/src/pages/SendPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/NetworksPage.tsx",
+          "frontend/src/pages/SendPage.tsx"
+        ]
+      }
+    ]
+  },
+  "changedFiles": [
+    "build-request.json",
+    "build-template/README.md",
+    "feature_evidence.json",
+    "frontend-file-summaries.txt",
+    "frontend-implementation-plan.json",
+    "frontend/src/components/WalletAddressCard.tsx",
+    "frontend/src/pages/DashboardPage.tsx",
+    "frontend/src/pages/NetworksPage.tsx",
+    "frontend/src/pages/SendPage.tsx",
+    "frontend/src/utils/addressDerivation.ts",
+    "project_state.json",
+    "scratch/component-selection.json",
+    "spec.md",
+    "spec_vs_diff_report.json"
+  ]
+}

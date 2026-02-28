@@ -1,0 +1,48 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-after-a-user-logs-in-via-internet-identity-derive-and-display-their-icp-account-address-account-id-principal-based-address-and-a-deterministic-evm-compatible-wallet-address-derived-from-the-user-s-principal-show-both-addresses-prominently-on-the-dashboard-page-in-clearly-labeled-cards-with-copy-to-clipboard-buttons-so-the-user-knows-where-to-receive-tokens",
+      "featureTitle": "After a user logs in via Internet Identity, derive and display their ICP account address (Account ID / principal-based address) and a deterministic EVM-compatible wallet address (derived from the user's principal). Show both addresses prominently on the Dashboard page in clearly labeled cards with copy-to-clipboard buttons, so the user knows where to receive tokens.",
+      "files": [
+        "frontend/src/components/WalletAddressCard.tsx",
+        "frontend/src/pages/DashboardPage.tsx",
+        "frontend/src/utils/addressDerivation.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-8"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-pre-populate-the-send-form-s-sender-address-fields-and-the-networks-page-s-associated-address-column-with-the-user-s-derived-icp-and-evm-addresses-so-they-are-consistently-used-across-the-app-as-the-user-s-own-send-from-addresses",
+      "featureTitle": "Pre-populate the 'Send' form's sender address fields and the Networks page's associated address column with the user's derived ICP and EVM addresses so they are consistently used across the app as the user's own send-from addresses.",
+      "files": [
+        "frontend/src/pages/NetworksPage.tsx",
+        "frontend/src/pages/SendPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-9"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

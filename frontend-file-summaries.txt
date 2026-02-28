@@ -1,0 +1,10 @@
+{
+  "frontend/src/App.tsx": "Main application entry with TanStack Router setup, authentication guard layout (shows LoginPage for unauthenticated users), route definitions for all wallet pages, and UserProfileSetup modal integration.",
+  "frontend/src/components/GlassCard.tsx": "Reusable glassmorphism card component with optional `style` prop (now added), raised/hover variants, and dark-theme styling via CSS classes.",
+  "frontend/src/pages/SendPage.tsx": "Multi-step send transaction page (form → confirm → success) with auto-populated read-only From address derived from the authenticated principal based on the selected network type.",
+  "frontend/src/pages/TransactionHistoryPage.tsx": "Transaction history page displaying all recorded send intents with status badges, search/filter controls, per-record deletion, and a clear-all action.",
+  "frontend/src/utils/addressDerivation.ts": "Utility module for deriving ICP account address (principal text) and EVM-compatible address (SHA-256 hash of principal, last 20 bytes as 0x-prefixed hex) from a Principal, plus a truncateAddress helper.",
+  "frontend/src/components/WalletAddressCard.tsx": "Reusable card component displaying a labeled wallet address (ICP or EVM) with a full-address tooltip, copy-to-clipboard button with confirmation, and a descriptive note.",
+  "frontend/src/pages/DashboardPage.tsx": "Dashboard page showing a \"Your Wallet Addresses\" section (ICP + EVM cards derived from the authenticated principal), portfolio summary stats, token balance list, and quick action buttons.",
+  "frontend/src/pages/NetworksPage.tsx": "Networks page listing all supported blockchain networks with their type, chain ID, explorer link, and the user's associated derived address (ICP or EVM) with copy-to-clipboard per row."
+}

@@ -1,0 +1,127 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 5,
+  "summary": "Building a crypto wallet DApp similar to Oisy Wallet on Internet Computer, with Internet Identity authentication, multi-chain asset viewing, ERC20 token management, address monitoring, and real-time balance queries. User plans to add custom features on top of this base.",
+  "architectural_notes": [
+    "基于 Internet Computer (ICP) 区块链平台构建全栈 DApp",
+    "使用 Internet Identity 作为身份认证系统"
+  ],
+  "known_issues": [],
+  "isFixRequest": false,
+  "existing_features": [
+    {
+      "id": "feature-implement-internet-identity-authentication-allow-users-to-log-in-and-log-out-using-internet-identity-display-the-user-s-principal-id-after-login-gate-all-wallet-features-behind-authentication",
+      "title": "Implement Internet Identity authentication: allow users to log in and log out using Internet Identity. Display the user's principal ID after login. Gate all wallet features behind authentication.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-a-multi-chain-asset-overview-page-support-at-least-icp-and-ethereum-chains-allow-users-to-configure-custom-rpc-endpoints-for-each-chain-display-each-chain-s-name-network-status-and-the-user-s-associated-address",
+      "title": "Implement a multi-chain asset overview page. Support at least ICP and Ethereum chains. Allow users to configure custom RPC endpoints for each chain. Display each chain's name, network status, and the user's associated address.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-erc-20-token-management-allow-users-to-add-custom-erc-20-tokens-by-specifying-a-contract-address-token-symbol-token-name-and-decimal-places-display-the-list-of-added-tokens-with-their-metadata",
+      "title": "Implement ERC-20 token management. Allow users to add custom ERC-20 tokens by specifying a contract address, token symbol, token name, and decimal places. Display the list of added tokens with their metadata.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-address-monitoring-and-balance-display-allow-users-to-add-wallet-addresses-to-a-watchlist-for-each-watched-address-display-the-stored-balance-manually-entered-or-fetched-show-a-balance-history-or-last-updated-timestamp",
+      "title": "Implement address monitoring and balance display. Allow users to add wallet addresses to a watchlist. For each watched address, display the stored balance (manually entered or fetched). Show a balance history or last-updated timestamp.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-build-a-transaction-send-flow-ui-provide-a-send-form-where-users-can-enter-a-recipient-address-select-a-token-chain-and-enter-an-amount-the-form-should-validate-inputs-and-show-a-confirmation-step-before-submission-since-on-chain-signing-is-not-available-in-motoko-backend-record-the-send-intent-in-the-backend-and-display-it-in-a-transaction-history-list",
+      "title": "Build a transaction / send flow UI. Provide a 'Send' form where users can enter a recipient address, select a token/chain, and enter an amount. The form should validate inputs and show a confirmation step before submission. Since on-chain signing is not available in Motoko backend, record the send intent in the backend and display it in a transaction history list.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-design-and-apply-a-cohesive-dark-mode-visual-theme-with-a-sleek-modern-fintech-aesthetic-use-a-deep-charcoal-near-black-background-palette-with-vibrant-teal-cyan-accent-colors-crisp-white-typography-subtle-glassmorphism-card-components-and-smooth-micro-interactions-apply-this-theme-consistently-across-all-pages-and-components",
+      "title": "Design and apply a cohesive dark-mode visual theme with a sleek, modern fintech aesthetic. Use a deep charcoal/near-black background palette with vibrant teal/cyan accent colors, crisp white typography, subtle glassmorphism card components, and smooth micro-interactions. Apply this theme consistently across all pages and components.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-render-the-generated-wallet-logo-and-hero-background-images-as-static-assets-from-frontend-public-assets-generated-use-the-wallet-logo-in-the-top-navigation-bar-and-the-hero-background-on-the-login-landing-page",
+      "title": "Render the generated wallet logo and hero background images as static assets from frontend/public/assets/generated. Use the wallet logo in the top navigation bar and the hero background on the login/landing page.",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-after-a-user-logs-in-via-internet-identity-derive-and-display-their-icp-account-address-account-id-principal-based-address-and-a-deterministic-evm-compatible-wallet-address-derived-from-the-user-s-principal-show-both-addresses-prominently-on-the-dashboard-page-in-clearly-labeled-cards-with-copy-to-clipboard-buttons-so-the-user-knows-where-to-receive-tokens",
+      "title": "After a user logs in via Internet Identity, derive and display their ICP account address (Account ID / principal-based address) and a deterministic EVM-compatible wallet address (derived from the user's principal). Show both addresses prominently on the Dashboard page in clearly labeled cards with copy-to-clipboard buttons, so the user knows where to receive tokens.",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-pre-populate-the-send-form-s-sender-address-fields-and-the-networks-page-s-associated-address-column-with-the-user-s-derived-icp-and-evm-addresses-so-they-are-consistently-used-across-the-app-as-the-user-s-own-send-from-addresses",
+      "title": "Pre-populate the 'Send' form's sender address fields and the Networks page's associated address column with the user's derived ICP and EVM addresses so they are consistently used across the app as the user's own send-from addresses.",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Internet Identity 登录认证",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "多链资产查看（支持自定义 RPC 配置）",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "ERC20 代币管理（可配置合约地址和 decimals）",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "地址监控与余额实时查询",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "简洁流畅的钱包操作界面",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "登录后显示用户自己的 ICP 和 EVM 钱包地址，支持接收和发送代币",
+      "reqIds": [],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "Oisy-like Crypto Wallet",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

@@ -1,0 +1,43 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-28T07:55:43.388Z",
+  "summary": "The diff implements most of REQ-8 and REQ-9 correctly. The Dashboard shows a 'Your Wallet Addresses' section with ICP and EVM address cards, copy-to-clipboard with toast confirmation, truncated-with-tooltip display, and authentication gating. The Networks page shows per-row derived addresses, and the Send page auto-populates the From address. One notable gap is the ICP address derivation: it returns the principal text directly rather than a proper ICP Account ID. The consistency requirement across pages is met as all three pages use the same utility functions.",
+  "missing_requirements": [
+    {
+      "id": "REQ-8",
+      "requirement": "The ICP account address must be derived from the authenticated principal as a proper Account ID (principal-based address), not just the principal text itself.",
+      "reason": "The deriveICPAddress function in addressDerivation.ts simply returns the principal text string unchanged, rather than computing a proper ICP Account ID (which involves CRC32 checksum + SHA-224 hashing of the principal bytes into a 32-byte account identifier). The AC specifies 'ICP account address (derived from the authenticated principal)' implying a proper Account ID derivation.",
+      "evidence": [
+        "frontend/src/utils/addressDerivation.ts"
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "requirement": "Unauthenticated users see the login prompt on the Dashboard.",
+      "reason": "The Dashboard header always shows a 'Connected' green badge regardless of authentication state, and there is no login prompt rendered when isAuthenticated is false. The wallet addresses section is correctly hidden, but no login prompt is shown for unauthenticated users.",
+      "evidence": [
+        "frontend/src/pages/DashboardPage.tsx"
+      ]
+    }
+  ],
+  "hallucinated_features": [
+    {
+      "description": "Transaction history recording via localStorage on the Send page, including a TransactionRecord interface and localStorage persistence logic.",
+      "reason": "The build request for REQ-8 and REQ-9 only asks for address derivation, display, and pre-population. Saving transaction records to localStorage was not requested in these requirements.",
+      "evidence": [
+        "frontend/src/pages/SendPage.tsx"
+      ]
+    }
+  ],
+  "confidence": 0.82,
+  "changed_files": [
+    "frontend-file-summaries.txt",
+    "frontend/src/components/WalletAddressCard.tsx",
+    "frontend/src/pages/DashboardPage.tsx",
+    "frontend/src/pages/NetworksPage.tsx",
+    "frontend/src/pages/SendPage.tsx",
+    "frontend/src/utils/addressDerivation.ts",
+    "project_state.json"
+  ]
+}

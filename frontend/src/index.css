@@ -1,0 +1,258 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.75rem;
+
+    /* Light mode (fallback, app is dark-first) */
+    --background: 0.12 0.008 240;
+    --foreground: 0.95 0.01 240;
+    --card: 0.16 0.01 240;
+    --card-foreground: 0.95 0.01 240;
+    --popover: 0.18 0.012 240;
+    --popover-foreground: 0.95 0.01 240;
+    --primary: 0.78 0.18 185;
+    --primary-foreground: 0.08 0.01 240;
+    --secondary: 0.22 0.015 240;
+    --secondary-foreground: 0.85 0.01 240;
+    --muted: 0.20 0.012 240;
+    --muted-foreground: 0.55 0.02 240;
+    --accent: 0.72 0.20 185;
+    --accent-foreground: 0.08 0.01 240;
+    --destructive: 0.60 0.22 25;
+    --destructive-foreground: 0.98 0 0;
+    --border: 0.28 0.015 240;
+    --input: 0.22 0.012 240;
+    --ring: 0.78 0.18 185;
+
+    --chart-1: 0.78 0.18 185;
+    --chart-2: 0.65 0.20 160;
+    --chart-3: 0.55 0.18 200;
+    --chart-4: 0.70 0.22 140;
+    --chart-5: 0.60 0.15 220;
+
+    --sidebar: 0.14 0.01 240;
+    --sidebar-foreground: 0.90 0.01 240;
+    --sidebar-primary: 0.78 0.18 185;
+    --sidebar-primary-foreground: 0.08 0.01 240;
+    --sidebar-accent: 0.20 0.012 240;
+    --sidebar-accent-foreground: 0.85 0.01 240;
+    --sidebar-border: 0.25 0.012 240;
+    --sidebar-ring: 0.78 0.18 185;
+
+    /* Custom wallet tokens */
+    --teal: 0.78 0.18 185;
+    --teal-dim: 0.65 0.15 185;
+    --teal-glow: 0.85 0.20 185;
+    --surface: 0.16 0.01 240;
+    --surface-raised: 0.20 0.012 240;
+    --surface-overlay: 0.24 0.015 240;
+  }
+
+  .dark {
+    --background: 0.10 0.008 240;
+    --foreground: 0.95 0.01 240;
+    --card: 0.14 0.01 240;
+    --card-foreground: 0.95 0.01 240;
+    --popover: 0.16 0.012 240;
+    --popover-foreground: 0.95 0.01 240;
+    --primary: 0.78 0.18 185;
+    --primary-foreground: 0.08 0.01 240;
+    --secondary: 0.20 0.015 240;
+    --secondary-foreground: 0.85 0.01 240;
+    --muted: 0.18 0.012 240;
+    --muted-foreground: 0.55 0.02 240;
+    --accent: 0.72 0.20 185;
+    --accent-foreground: 0.08 0.01 240;
+    --destructive: 0.60 0.22 25;
+    --destructive-foreground: 0.98 0 0;
+    --border: 0.25 0.015 240;
+    --input: 0.20 0.012 240;
+    --ring: 0.78 0.18 185;
+
+    --chart-1: 0.78 0.18 185;
+    --chart-2: 0.65 0.20 160;
+    --chart-3: 0.55 0.18 200;
+    --chart-4: 0.70 0.22 140;
+    --chart-5: 0.60 0.15 220;
+
+    --sidebar: 0.12 0.01 240;
+    --sidebar-foreground: 0.90 0.01 240;
+    --sidebar-primary: 0.78 0.18 185;
+    --sidebar-primary-foreground: 0.08 0.01 240;
+    --sidebar-accent: 0.18 0.012 240;
+    --sidebar-accent-foreground: 0.85 0.01 240;
+    --sidebar-border: 0.22 0.012 240;
+    --sidebar-ring: 0.78 0.18 185;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    background-color: oklch(0.10 0.008 240);
+    color: oklch(0.95 0.01 240);
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: oklch(0.14 0.01 240);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: oklch(0.28 0.015 240);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.78 0.18 185 / 0.6);
+  }
+}
+
+@layer components {
+  .glass-card {
+    background: oklch(0.16 0.01 240 / 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid oklch(0.30 0.015 240 / 0.5);
+    border-radius: var(--radius);
+  }
+
+  .glass-card-raised {
+    background: oklch(0.20 0.012 240 / 0.9);
+    backdrop-filter: blur(16px);
+    border: 1px solid oklch(0.35 0.02 240 / 0.4);
+    border-radius: var(--radius);
+  }
+
+  .teal-glow {
+    box-shadow: 0 0 20px oklch(0.78 0.18 185 / 0.25), 0 0 40px oklch(0.78 0.18 185 / 0.10);
+  }
+
+  .teal-border {
+    border-color: oklch(0.78 0.18 185 / 0.5);
+  }
+
+  .btn-primary {
+    background: oklch(0.78 0.18 185);
+    color: oklch(0.08 0.01 240);
+    font-weight: 600;
+    transition: all 0.2s ease;
+  }
+
+  .btn-primary:hover {
+    background: oklch(0.85 0.20 185);
+    box-shadow: 0 0 16px oklch(0.78 0.18 185 / 0.4);
+  }
+
+  .nav-link {
+    @apply flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200;
+    color: oklch(0.60 0.02 240);
+  }
+
+  .nav-link:hover {
+    color: oklch(0.95 0.01 240);
+    background: oklch(0.20 0.012 240);
+  }
+
+  .nav-link.active {
+    color: oklch(0.78 0.18 185);
+    background: oklch(0.78 0.18 185 / 0.12);
+  }
+
+  .stat-card {
+    background: linear-gradient(135deg, oklch(0.18 0.015 240) 0%, oklch(0.14 0.01 240) 100%);
+    border: 1px solid oklch(0.28 0.015 240 / 0.6);
+    border-radius: var(--radius);
+    transition: all 0.2s ease;
+  }
+
+  .stat-card:hover {
+    border-color: oklch(0.78 0.18 185 / 0.3);
+    transform: translateY(-1px);
+  }
+
+  .input-dark {
+    background: oklch(0.16 0.01 240);
+    border: 1px solid oklch(0.28 0.015 240);
+    color: oklch(0.95 0.01 240);
+    border-radius: calc(var(--radius) - 2px);
+    transition: border-color 0.2s ease;
+  }
+
+  .input-dark:focus {
+    border-color: oklch(0.78 0.18 185 / 0.7);
+    outline: none;
+    box-shadow: 0 0 0 2px oklch(0.78 0.18 185 / 0.15);
+  }
+
+  .badge-teal {
+    background: oklch(0.78 0.18 185 / 0.15);
+    color: oklch(0.78 0.18 185);
+    border: 1px solid oklch(0.78 0.18 185 / 0.3);
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.125rem 0.625rem;
+  }
+
+  .badge-success {
+    background: oklch(0.65 0.18 145 / 0.15);
+    color: oklch(0.75 0.18 145);
+    border: 1px solid oklch(0.65 0.18 145 / 0.3);
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.125rem 0.625rem;
+  }
+
+  .badge-warning {
+    background: oklch(0.75 0.18 75 / 0.15);
+    color: oklch(0.80 0.18 75);
+    border: 1px solid oklch(0.75 0.18 75 / 0.3);
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.125rem 0.625rem;
+  }
+
+  .badge-pending {
+    background: oklch(0.65 0.15 220 / 0.15);
+    color: oklch(0.72 0.15 220);
+    border: 1px solid oklch(0.65 0.15 220 / 0.3);
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.125rem 0.625rem;
+  }
+
+  @keyframes pulse-teal {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .animate-pulse-teal {
+    animation: pulse-teal 2s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .shimmer {
+    background: linear-gradient(90deg, oklch(0.18 0.01 240) 25%, oklch(0.24 0.015 240) 50%, oklch(0.18 0.01 240) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+}
