@@ -80,7 +80,6 @@ export default function WatchlistPage() {
 
   const handleRefresh = async (id: string) => {
     setRefreshingId(id);
-    // Simulate balance refresh (in a real app, this would call an RPC endpoint)
     await new Promise(r => setTimeout(r, 1200));
     const updated = entries.map(e =>
       e.id === id
@@ -129,6 +128,16 @@ export default function WatchlistPage() {
   };
 
   const getNetwork = (id: string) => networks.find(n => n.id === id);
+
+  // Derive a display color for a network badge from its color field or a fallback
+  const networkBadgeStyle = (net: NetworkConfig) => {
+    const c = net.color ?? 'oklch(0.78 0.18 185)';
+    return {
+      background: `color-mix(in oklch, ${c} 15%, transparent)`,
+      color: c,
+      border: `1px solid color-mix(in oklch, ${c} 30%, transparent)`,
+    };
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
@@ -182,7 +191,7 @@ export default function WatchlistPage() {
                         border: '1px solid oklch(0.70 0.18 75 / 0.25)',
                       }}
                     >
-                      <Eye className="w-4.5 h-4.5" style={{ color: 'oklch(0.70 0.18 75)' }} />
+                      <Eye className="w-4 h-4" style={{ color: 'oklch(0.70 0.18 75)' }} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -197,11 +206,7 @@ export default function WatchlistPage() {
                         {net && (
                           <span
                             className="text-xs px-2 py-0.5 rounded-full"
-                            style={{
-                              background: `${net.color.replace(')', ' / 0.12)')}`,
-                              color: net.color,
-                              border: `1px solid ${net.color.replace(')', ' / 0.25)')}`,
-                            }}
+                            style={networkBadgeStyle(net)}
                           >
                             {net.symbol}
                           </span>
@@ -224,7 +229,7 @@ export default function WatchlistPage() {
                           <span className="text-xs" style={{ color: 'oklch(0.50 0.02 240)' }}>Balance: </span>
                           <span className="text-sm font-semibold" style={{ color: 'oklch(0.85 0.01 240)' }}>
                             {isRefreshing ? (
-                              <span className="shimmer inline-block w-16 h-4 rounded" />
+                              <span className="inline-block w-16 h-4 rounded bg-white/10 animate-pulse" />
                             ) : (
                               entry.balance
                             )}
@@ -346,7 +351,7 @@ export default function WatchlistPage() {
               <Input
                 value={form.balance}
                 onChange={(e) => setForm(p => ({ ...p, balance: e.target.value }))}
-                placeholder="e.g. 1.234 ETH"
+                placeholder="e.g. 1.5 ETH"
                 style={{
                   background: 'oklch(0.14 0.01 240)',
                   borderColor: 'oklch(0.28 0.015 240)',
@@ -382,13 +387,15 @@ export default function WatchlistPage() {
             <AlertDialogDescription style={{ color: 'oklch(0.55 0.02 240)' }}>
               Remove{' '}
               <strong style={{ color: 'oklch(0.85 0.01 240)' }}>
-                {deleteTarget?.label || shortAddress(deleteTarget?.address ?? '')}
+                {deleteTarget?.label || shortAddress(deleteTarget?.address ?? '', 8)}
               </strong>{' '}
               from your watchlist?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel style={{ borderColor: 'oklch(0.28 0.015 240)', color: 'oklch(0.65 0.02 240)', background: 'transparent' }}>
+            <AlertDialogCancel
+              style={{ borderColor: 'oklch(0.28 0.015 240)', color: 'oklch(0.65 0.02 240)', background: 'transparent' }}
+            >
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction

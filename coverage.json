@@ -1,56 +1,35 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-28T07:55:43.392Z",
+  "generatedAt": "2026-02-28T09:44:11.153Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 2,
-    "implemented": 2,
+    "total": 1,
+    "implemented": 0,
     "items": [
       {
-        "id": "REQ-8",
-        "summary": "After a user logs in via Internet Identity, derive and display their ICP account address (Account ID / principal-based address) and a deterministic EVM-compatible wallet address (derived from the user's principal). Show both addresses prominently on the Dashboard page in clearly labeled cards with copy-to-clipboard buttons, so the user knows where to receive tokens.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/utils/addressDerivation.ts",
-          "frontend/src/components/WalletAddressCard.tsx",
-          "frontend/src/pages/DashboardPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/utils/addressDerivation.ts",
-          "frontend/src/components/WalletAddressCard.tsx",
-          "frontend/src/pages/DashboardPage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-9",
-        "summary": "Pre-populate the 'Send' form's sender address fields and the Networks page's associated address column with the user's derived ICP and EVM addresses so they are consistently used across the app as the user's own send-from addresses.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/NetworksPage.tsx",
-          "frontend/src/pages/SendPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/NetworksPage.tsx",
-          "frontend/src/pages/SendPage.tsx"
-        ]
+        "id": "REQ-32",
+        "summary": "Fix the `verifyAndActivateSubscription` function in `backend/main.mo` so that it correctly detects and validates ICP transfer operations in a given block. The current implementation returns 'Block does not contain a transfer operation' even when a valid ICP transfer exists in the block. Specifically: (1) Review the ICP Ledger `query_blocks` response structure and ensure the block's transaction type field is accessed by the correct field name — the ICP Ledger returns blocks with a `transaction` field containing an `operation` variant that may be `#Transfer`, `#Mint`, `#Burn`, or `#Approve`; the code must match the exact Motoko variant tag used in the decoded response. (2) Ensure the inter-canister call to the ICP Ledger canister (`ryjl3-tyaaa-aaaaa-aaaba-cai`) uses the correct method (`query_blocks`) and the request/response types are fully and correctly typed in the Motoko actor type definition — missing or misnamed fields in the type annotation cause silent decoding failures that make operation fields appear absent. (3) Verify that the destination account comparison correctly converts the canister's treasury Account ID (derived from the canister's own principal) to the same binary/text format used in the ledger block's `to` field. (4) Confirm the amount threshold check uses `>= 100_000` e8s (0.001 ICP). (5) Add descriptive error variants so failures return meaningful messages such as 'Block not found', 'Transfer amount insufficient', 'Wrong destination address', or 'Already subscribed' instead of the generic 'Block does not contain a transfer operation'.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
     "build-request.json",
-    "build-template/README.md",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/WalletAddressCard.tsx",
-    "frontend/src/pages/DashboardPage.tsx",
-    "frontend/src/pages/NetworksPage.tsx",
-    "frontend/src/pages/SendPage.tsx",
-    "frontend/src/utils/addressDerivation.ts",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useQueries.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

@@ -1,13 +1,18 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 5,
-  "summary": "Building a crypto wallet DApp similar to Oisy Wallet on Internet Computer, with Internet Identity authentication, multi-chain asset viewing, ERC20 token management, address monitoring, and real-time balance queries. User plans to add custom features on top of this base.",
+  "projectStateVersion": 19,
+  "summary": "Building a crypto wallet DApp similar to Oisy Wallet on Internet Computer, with Internet Identity authentication, multi-chain asset viewing, ERC20 token management, address monitoring, real-time balance queries, a whitelist address book, and a transparent paid subscription/access-control system using ICP smart contracts. Also distinguishing ICP native addresses (Account ID) from ICP contract token addresses (Principal ID). Subscription fee is 0.001 ICP. Subscription verification uses Plan A: user manually transfers ICP via external wallet, enters the Block Index on the subscription page, and the backend verifies the block against ICP Ledger to activate the subscription.",
   "architectural_notes": [
     "基于 Internet Computer (ICP) 区块链平台构建全栈 DApp",
-    "使用 Internet Identity 作为身份认证系统"
+    "使用 Internet Identity 作为身份认证系统",
+    "收费访问控制通过 ICP Canister 智能合约实现，收费记录上链透明可查，前端在验证付款状态后解锁功能",
+    "订阅付款采用方案A：用户通过外部 ICP 钱包手动转账，在前端输入 Block Index，后端调用 ICP Ledger Canister 查询并验证区块后激活订阅"
   ],
-  "known_issues": [],
-  "isFixRequest": false,
+  "known_issues": [
+    "Internet Identity 登录账户无法从前端直接发起 ICP Ledger 转账，需要用户通过外部钱包（如 NNS App）完成链上转账",
+    "`verifyAndActivateSubscription` returns 'Block does not contain a transfer operation' even when user has completed a valid ICP transfer to the treasury address — block parsing logic in backend/main.mo is not correctly detecting transfer operations"
+  ],
+  "isFixRequest": true,
   "existing_features": [
     {
       "id": "feature-implement-internet-identity-authentication-allow-users-to-log-in-and-log-out-using-internet-identity-display-the-user-s-principal-id-after-login-gate-all-wallet-features-behind-authentication",
@@ -80,6 +85,150 @@
         "REQ-9"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-remove-the-btc-balance-display-from-the-dashboard-page-since-btc-network-is-not-supported-by-this-wallet-all-btc-related-balance-entries-mock-data-and-ui-elements-should-be-removed-from-the-portfolio-summary-section-of-dashboardpage-tsx",
+      "title": "Remove the BTC balance display from the Dashboard page. Since BTC network is not supported by this wallet, all BTC-related balance entries, mock data, and UI elements should be removed from the portfolio summary section of DashboardPage.tsx.",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-on-evm-compatible-networks-ethereum-bsc-polygon-arbitrum-display-the-erc-20-token-balances-for-each-token-the-user-has-added-via-the-tokens-page-for-each-user-added-erc-20-token-show-the-token-symbol-contract-address-truncated-and-a-stored-mock-balance-the-balance-should-be-editable-or-manually-enterable-since-on-chain-rpc-calls-are-simulated",
+      "title": "On EVM-compatible networks (Ethereum, BSC, Polygon, Arbitrum), display the ERC-20 token balances for each token the user has added via the Tokens page. For each user-added ERC-20 token, show the token symbol, contract address (truncated), and a stored/mock balance. The balance should be editable or manually enterable since on-chain RPC calls are simulated.",
+      "reqIds": [
+        "REQ-11"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-the-send-form-sendpage-tsx-allow-users-to-select-a-user-added-erc-20-token-as-the-asset-to-send-when-an-evm-network-is-selected-the-token-selector-should-list-all-user-added-erc-20-tokens-from-walletstorage-in-addition-to-the-native-evm-token-eth-bnb-matic-etc-when-an-erc-20-token-is-selected-pre-fill-the-contract-address-field-if-shown-and-record-the-send-intent-including-token-symbol-contract-address-recipient-amount-network-in-transaction-history-via-walletstorage",
+      "title": "In the Send form (SendPage.tsx), allow users to select a user-added ERC-20 token as the asset to send when an EVM network is selected. The token selector should list all user-added ERC-20 tokens from walletStorage in addition to the native EVM token (ETH/BNB/MATIC, etc.). When an ERC-20 token is selected, pre-fill the contract address field if shown, and record the send intent (including token symbol, contract address, recipient, amount, network) in transaction history via walletStorage.",
+      "reqIds": [
+        "REQ-12"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-whitelist-address-book-data-model-to-walletstorage-each-whitelist-entry-must-include-a-unique-id-an-address-type-icp-evm-an-address-string-a-human-readable-label-and-a-createdat-timestamp-implement-crud-functions-addwhitelistentry-getwhitelistentries-updatewhitelistentry-deletewhitelistentry-persist-entries-in-localstorage-keyed-by-the-authenticated-user-s-principal-id",
+      "title": "Add a whitelist address book data model to walletStorage. Each whitelist entry must include: a unique ID, an address type ('icp' | 'evm'), an address string, a human-readable label, and a createdAt timestamp. Implement CRUD functions: addWhitelistEntry, getWhitelistEntries, updateWhitelistEntry, deleteWhitelistEntry. Persist entries in localStorage keyed by the authenticated user's principal ID.",
+      "reqIds": [
+        "REQ-13"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-new-whitelist-page-frontend-src-pages-whitelistpage-tsx-that-allows-authenticated-users-to-manage-their-whitelist-address-book-the-page-must-display-all-saved-whitelist-entries-in-a-table-with-columns-label-type-icp-evm-badge-address-truncated-with-copy-button-and-actions-edit-delete-provide-an-add-address-button-that-opens-a-dialog-form-where-the-user-can-enter-a-label-select-type-icp-or-evm-and-input-the-address-include-inline-validation-icp-addresses-should-be-non-empty-evm-addresses-must-match-the-0x-hex-pattern-support-editing-the-label-address-of-existing-entries-match-the-existing-dark-fintech-glassmorphism-visual-theme",
+      "title": "Create a new Whitelist page (frontend/src/pages/WhitelistPage.tsx) that allows authenticated users to manage their whitelist address book. The page must display all saved whitelist entries in a table with columns: Label, Type (ICP / EVM badge), Address (truncated with copy button), and Actions (Edit / Delete). Provide an 'Add Address' button that opens a dialog/form where the user can enter a label, select type (ICP or EVM), and input the address. Include inline validation: ICP addresses should be non-empty; EVM addresses must match the 0x… hex pattern. Support editing the label/address of existing entries. Match the existing dark fintech glassmorphism visual theme.",
+      "reqIds": [
+        "REQ-14"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-whitelist-navigation-link-to-the-navbar-component-frontend-src-components-navbar-tsx-pointing-to-the-whitelist-route-the-link-must-appear-in-both-the-desktop-nav-and-the-mobile-menu-consistent-with-the-styling-of-the-other-nav-links",
+      "title": "Add a 'Whitelist' navigation link to the Navbar component (frontend/src/components/Navbar.tsx) pointing to the /whitelist route. The link must appear in both the desktop nav and the mobile menu, consistent with the styling of the other nav links.",
+      "reqIds": [
+        "REQ-15"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-register-the-whitelist-route-in-the-router-configuration-in-frontend-src-app-tsx-pointing-to-the-new-whitelistpage-component-protected-by-the-existing-authentication-guard-so-unauthenticated-users-are-redirected-to-the-login-page",
+      "title": "Register the /whitelist route in the router configuration in frontend/src/App.tsx, pointing to the new WhitelistPage component, protected by the existing authentication guard so unauthenticated users are redirected to the login page.",
+      "reqIds": [
+        "REQ-16"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-the-send-form-frontend-src-pages-sendpage-tsx-add-a-select-from-whitelist-button-or-dropdown-next-to-the-recipient-address-input-field-when-the-user-clicks-it-display-a-filtered-list-of-whitelist-entries-matching-the-currently-selected-network-type-show-only-icp-type-whitelist-entries-when-an-icp-network-is-selected-and-only-evm-type-entries-when-an-evm-network-is-selected-selecting-a-whitelist-entry-pre-fills-the-recipient-address-field-with-that-entry-s-address-the-label-of-the-selected-entry-should-be-shown-as-helper-text-below-the-address-field",
+      "title": "In the Send form (frontend/src/pages/SendPage.tsx), add a 'Select from Whitelist' button or dropdown next to the recipient address input field. When the user clicks it, display a filtered list of whitelist entries matching the currently selected network type: show only ICP-type whitelist entries when an ICP network is selected, and only EVM-type entries when an EVM network is selected. Selecting a whitelist entry pre-fills the recipient address field with that entry's address. The label of the selected entry should be shown as helper text below the address field.",
+      "reqIds": [
+        "REQ-17"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-service-terms-subscription-page-frontend-src-pages-subscriptionpage-tsx-the-page-must-1-display-a-clear-service-description-explaining-that-the-wallet-charges-a-one-time-fee-of-66-icp-to-cover-on-chain-operational-costs-2-show-the-fee-amount-and-the-receiving-canister-treasury-address-prominently-3-present-a-terms-of-service-section-the-user-must-explicitly-accept-via-a-checkbox-before-proceeding-4-include-a-pay-activate-button-that-when-clicked-shows-a-confirmation-dialog-summarising-the-amount-and-destination-5-after-user-confirms-call-the-backend-recordpayment-function-to-register-the-intent-and-display-a-pending-success-failure-status-6-if-the-user-is-already-subscribed-active-show-an-active-subscription-badge-and-skip-the-payment-form-match-the-existing-dark-fintech-glassmorphism-visual-theme",
+      "title": "Create a Service Terms & Subscription page (frontend/src/pages/SubscriptionPage.tsx). The page must: (1) display a clear service description explaining that the wallet charges a one-time fee of 66 ICP to cover on-chain operational costs; (2) show the fee amount and the receiving canister/treasury address prominently; (3) present a Terms of Service section the user must explicitly accept via a checkbox before proceeding; (4) include a 'Pay & Activate' button that, when clicked, shows a confirmation dialog summarising the amount and destination; (5) after user confirms, call the backend `recordPayment` function to register the intent and display a pending/success/failure status; (6) if the user is already subscribed (active), show an 'Active Subscription' badge and skip the payment form. Match the existing dark fintech glassmorphism visual theme.",
+      "reqIds": [
+        "REQ-19"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-subscription-gate-to-the-authentication-routing-layer-in-frontend-src-app-tsx-after-a-user-authenticates-via-internet-identity-query-the-backend-issubscribed-function-if-the-result-is-false-redirect-the-user-to-subscription-instead-of-the-dashboard-all-protected-routes-dashboard-send-networks-tokens-watchlist-whitelist-history-must-check-subscription-status-the-subscription-and-login-routes-must-remain-publicly-accessible-use-react-query-to-cache-the-subscription-status-and-invalidate-it-after-a-successful-payment",
+      "title": "Add a subscription gate to the authentication/routing layer in frontend/src/App.tsx. After a user authenticates via Internet Identity, query the backend `isSubscribed` function. If the result is false, redirect the user to /subscription instead of the dashboard. All protected routes (dashboard, send, networks, tokens, watchlist, whitelist, history) must check subscription status. The /subscription and /login routes must remain publicly accessible. Use React Query to cache the subscription status and invalidate it after a successful payment.",
+      "reqIds": [
+        "REQ-20"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-subscription-route-to-the-router-configuration-in-frontend-src-app-tsx-pointing-to-the-new-subscriptionpage-component-this-route-must-be-accessible-to-authenticated-users-regardless-of-subscription-status-add-a-subscription-link-in-the-navbar-frontend-src-components-navbar-tsx-visible-only-to-authenticated-users-appearing-in-both-desktop-and-mobile-menus-consistent-with-existing-nav-link-styling",
+      "title": "Add a /subscription route to the router configuration in frontend/src/App.tsx pointing to the new SubscriptionPage component. This route must be accessible to authenticated users regardless of subscription status. Add a 'Subscription' link in the Navbar (frontend/src/components/Navbar.tsx) visible only to authenticated users, appearing in both desktop and mobile menus, consistent with existing nav link styling.",
+      "reqIds": [
+        "REQ-21"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-extend-the-icp-address-type-system-throughout-the-app-to-distinguish-between-two-icp-address-formats-1-icp-native-address-account-id-a-64-character-hex-string-used-for-native-icp-transfers-2-icp-token-address-principal-id-a-textual-principal-identifier-e-g-xxxxx-xxxxx-used-for-icrc-1-icrc-2-standard-tokens-ckbtc-cketh-sns-tokens-etc-update-the-whitelist-data-model-in-frontend-src-lib-walletstorage-ts-change-the-address-type-field-from-icp-evm-to-icp-native-icp-token-evm-add-inline-validation-icp-native-addresses-must-match-a-64-character-hex-pattern-icp-token-addresses-must-match-the-principal-textual-format-groups-of-alphanumeric-characters-separated-by-hyphens-evm-addresses-must-match-0x-followed-by-40-hex-characters",
+      "title": "Extend the ICP address type system throughout the app to distinguish between two ICP address formats: (1) ICP Native Address (Account ID) — a 64-character hex string used for native ICP transfers; (2) ICP Token Address (Principal ID) — a textual Principal identifier (e.g. 'xxxxx-xxxxx-...') used for ICRC-1/ICRC-2 standard tokens (ckBTC, ckETH, SNS tokens, etc.). Update the whitelist data model in frontend/src/lib/walletStorage.ts: change the address type field from `'icp' | 'evm'` to `'icp-native' | 'icp-token' | 'evm'`. Add inline validation: icp-native addresses must match a 64-character hex pattern; icp-token addresses must match the Principal textual format (groups of alphanumeric characters separated by hyphens); evm addresses must match `0x` followed by 40 hex characters.",
+      "reqIds": [
+        "REQ-22"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-whitelistpage-tsx-to-support-the-three-address-types-icp-native-icp-token-evm-in-the-add-edit-dialog-the-type-selector-must-show-three-options-icp-native-account-id-icp-token-principal-id-and-evm-0x-display-distinct-badge-colours-for-each-type-in-the-table-e-g-teal-for-icp-native-cyan-for-icp-token-purple-for-evm-apply-the-appropriate-address-validation-rule-per-type-64-char-hex-principal-format-or-0x-hex-pattern",
+      "title": "Update WhitelistPage.tsx to support the three address types ('icp-native', 'icp-token', 'evm'). In the Add/Edit dialog, the type selector must show three options: 'ICP Native (Account ID)', 'ICP Token (Principal ID)', and 'EVM (0x…)'. Display distinct badge colours for each type in the table: e.g. teal for icp-native, cyan for icp-token, purple for evm. Apply the appropriate address validation rule per type (64-char hex, Principal format, or 0x hex pattern).",
+      "reqIds": [
+        "REQ-23"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-sendpage-tsx-to-handle-the-three-icp-address-types-when-an-icp-network-is-selected-show-a-sub-selector-for-address-format-native-icp-account-id-or-icrc-1-2-token-principal-id-filter-whitelist-entries-shown-in-the-select-from-whitelist-picker-to-match-the-selected-sub-type-show-only-icp-native-entries-when-native-icp-is-selected-and-only-icp-token-entries-when-icrc-token-is-selected-apply-the-appropriate-validation-to-the-recipient-address-field-based-on-the-selected-sub-type-record-the-address-type-icp-native-or-icp-token-in-the-transaction-history-entry",
+      "title": "Update SendPage.tsx to handle the three ICP address types. When an ICP network is selected, show a sub-selector for address format: 'Native ICP (Account ID)' or 'ICRC-1/2 Token (Principal ID)'. Filter whitelist entries shown in the 'Select from Whitelist' picker to match the selected sub-type: show only 'icp-native' entries when Native ICP is selected, and only 'icp-token' entries when ICRC token is selected. Apply the appropriate validation to the recipient address field based on the selected sub-type. Record the address type ('icp-native' or 'icp-token') in the transaction history entry.",
+      "reqIds": [
+        "REQ-24"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-frontend-src-pages-subscriptionpage-tsx-to-display-the-one-time-subscription-fee-as-0-001-icp-everywhere-it-was-previously-shown-as-66-icp-this-includes-the-service-description-text-the-fee-amount-card-label-the-confirmation-dialog-summary-and-any-helper-text-referencing-the-fee-amount",
+      "title": "Update frontend/src/pages/SubscriptionPage.tsx to display the one-time subscription fee as 0.001 ICP everywhere it was previously shown as 66 ICP. This includes the service description text, the fee amount card/label, the confirmation dialog summary, and any helper text referencing the fee amount.",
+      "reqIds": [
+        "REQ-26"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-frontend-src-pages-subscriptionpage-tsx-to-implement-the-plan-a-subscription-flow-replace-the-current-pay-activate-confirmation-dialog-with-the-following-ux-1-display-the-canister-treasury-receiving-address-the-canister-s-own-icp-account-id-prominently-in-a-clearly-labeled-card-with-a-copy-to-clipboard-button-2-show-step-by-step-instructions-telling-the-user-to-send-exactly-0-001-icp-to-the-displayed-treasury-address-using-an-external-icp-wallet-e-g-nns-app-plug-and-then-return-to-this-page-to-enter-the-block-index-3-add-a-block-index-numeric-input-field-where-the-user-enters-the-block-index-of-their-completed-icp-transfer-4-include-a-verify-activate-button-that-calls-the-backend-verifyandactivatesubscription-function-with-the-entered-block-index-5-display-real-time-status-feedback-loading-spinner-while-verifying-a-success-state-with-active-subscription-badge-on-success-and-a-descriptive-error-message-on-failure-e-g-block-not-found-transfer-amount-insufficient-wrong-destination-address-6-invalidate-the-react-query-subscription-status-cache-after-successful-activation-so-all-protected-routes-immediately-recognize-the-active-subscription-the-terms-of-service-checkbox-acceptance-must-still-be-required-before-the-user-can-submit-match-the-existing-dark-fintech-glassmorphism-visual-theme",
+      "title": "Update frontend/src/pages/SubscriptionPage.tsx to implement the Plan A subscription flow. Replace the current 'Pay & Activate' confirmation dialog with the following UX: (1) Display the Canister treasury receiving address (the canister's own ICP Account ID) prominently in a clearly labeled card with a copy-to-clipboard button; (2) Show step-by-step instructions telling the user to send exactly 0.001 ICP to the displayed treasury address using an external ICP wallet (e.g. NNS App, Plug), and then return to this page to enter the Block Index; (3) Add a 'Block Index' numeric input field where the user enters the block index of their completed ICP transfer; (4) Include a 'Verify & Activate' button that calls the backend `verifyAndActivateSubscription` function with the entered block index; (5) Display real-time status feedback: loading spinner while verifying, a success state with 'Active Subscription' badge on success, and a descriptive error message on failure (e.g. 'Block not found', 'Transfer amount insufficient', 'Wrong destination address'); (6) Invalidate the React Query subscription status cache after successful activation so all protected routes immediately recognize the active subscription. The Terms of Service checkbox acceptance must still be required before the user can submit. Match the existing dark fintech glassmorphism visual theme.",
+      "reqIds": [
+        "REQ-28"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-useverifyandactivatesubscription-mutation-hook-to-frontend-src-hooks-usequeries-ts-that-calls-the-backend-verifyandactivatesubscription-candid-method-with-a-block-index-bigint-handles-loading-error-success-states-and-on-success-invalidates-the-issubscribed-react-query-cache-key-so-the-subscription-gate-in-app-tsx-re-evaluates",
+      "title": "Add a `useVerifyAndActivateSubscription` mutation hook to frontend/src/hooks/useQueries.ts that calls the backend `verifyAndActivateSubscription` Candid method with a block index (bigint), handles loading/error/success states, and on success invalidates the `isSubscribed` React Query cache key so the subscription gate in App.tsx re-evaluates.",
+      "reqIds": [
+        "REQ-29"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-verify-activate-button-in-frontend-src-pages-subscriptionpage-tsx-so-that-it-becomes-enabled-and-responsive-once-the-user-has-entered-a-block-index-value-and-accepted-the-terms-of-service-checkbox-investigate-and-resolve-all-conditions-that-prevent-the-button-from-being-clickable-check-that-the-disabled-prop-correctly-evaluates-the-block-index-input-state-non-empty-valid-numeric-value-that-the-terms-of-service-checkbox-state-is-wired-correctly-that-the-useverifyandactivatesubscription-mutation-from-usequeries-ts-is-invoked-on-click-and-that-no-unhandled-error-or-missing-actor-reference-silently-blocks-the-handler-the-button-must-visually-reflect-its-enabled-disabled-state-e-g-full-opacity-when-enabled-reduced-opacity-when-disabled-and-trigger-the-backend-verifyandactivatesubscription-call-with-the-entered-block-index-as-a-bigint-when-clicked",
+      "title": "Fix the 'Verify & Activate' button in frontend/src/pages/SubscriptionPage.tsx so that it becomes enabled and responsive once the user has entered a Block Index value and accepted the Terms of Service checkbox. Investigate and resolve all conditions that prevent the button from being clickable: check that the `disabled` prop correctly evaluates the block index input state (non-empty, valid numeric value), that the Terms of Service checkbox state is wired correctly, that the `useVerifyAndActivateSubscription` mutation from useQueries.ts is invoked on click, and that no unhandled error or missing actor reference silently blocks the handler. The button must visually reflect its enabled/disabled state (e.g. full opacity when enabled, reduced opacity when disabled) and trigger the backend `verifyAndActivateSubscription` call with the entered block index as a bigint when clicked.",
+      "reqIds": [
+        "REQ-30"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -117,6 +266,94 @@
       "id": "AR-6",
       "summary": "登录后显示用户自己的 ICP 和 EVM 钱包地址，支持接收和发送代币",
       "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Dashboard 去掉 BTC 余额显示（钱包不支持 BTC 网络）",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "EVM 网络支持 ERC20 代币余额显示和转账功能",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-9",
+      "summary": "添加白名单地址列表功能：支持 ICP 和 EVM 两种地址类型，每条白名单包含地址和标签，转账时可选择对应类型的白名单地址作为收款方",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-10",
+      "summary": "实现透明的付费订阅/访问控制功能：使用 ICP Canister 智能合约处理收费逻辑，收费记录上链可查，提供服务条款页面让用户主动确认后再付费，后端验证付款后解锁钱包功能",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-11",
+      "summary": "区分 ICP 原生地址（Account ID，64位十六进制）和 ICP 合约代币地址（Principal ID，用于 ICRC-1/ICRC-2 标准代币），在白名单、转账等功能中支持两种地址格式",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-12",
+      "summary": "Add a paid access control system to the Motoko backend. Define a stable subscription record per principal storing: principalId, paidAmount (Nat), paidAt (Int timestamp), status ('active' | 'pending' | 'expired'). Implement the following public functions: (1) `getSubscriptionStatus(principal) -> SubscriptionRecord?` to query a user's subscription; (2) `recordPayment(principal, amount: Nat) -> Result` called after an on-chain ICP transfer is verified — marks the subscription as 'active' if amount >= 6_600_000_000 (66 ICP in e8s); (3) `isSubscribed(principal) -> Bool` for lightweight auth checks. All payment records must be stored in stable memory so they survive canister upgrades.",
+      "reqIds": [
+        "REQ-18"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-13",
+      "summary": "将订阅费用从 66 ICP 改为 0.001 ICP（前端展示、后端验证门槛同步更新）",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-14",
+      "summary": "Update the backend Motoko actor in backend/main.mo so that the minimum required payment threshold for activating a subscription is 100_000 e8s (0.001 ICP) instead of the previous 6_600_000_000 e8s (66 ICP). The `recordPayment` function must mark the subscription as 'active' when the paid amount is >= 100_000.",
+      "reqIds": [
+        "REQ-25"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-15",
+      "summary": "Upgrade subscription flow to Plan A: (1) Display the Canister treasury/receiving address on the subscription page; (2) Add a Block Index input field where the user enters the block index of their manual ICP transfer; (3) Update the backend to query ICP Ledger Canister, verify the block contains a transfer of >= 100,000 e8s to the treasury address from the user's account, and mark the subscription as 'active' if valid.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-16",
+      "summary": "Update the backend Motoko actor in backend/main.mo to add an ICP Ledger verification function. Implement a new public function `verifyAndActivateSubscription(blockIndex: Nat) -> async Result<Text, Text>` that: (1) calls the ICP Ledger Canister (mainnet canister ID: `ryjl3-tyaaa-aaaaa-aaaba-cai`) using an inter-canister call to query the block at the given index via the `query_blocks` or `get_blocks` method; (2) verifies that the block contains a transfer operation where the destination account matches the Canister's own treasury account ID, the amount is >= 100,000 e8s (0.001 ICP), and the memo or sender matches the calling principal's account; (3) if valid, marks the caller's subscription status as 'active' with the paid amount and current timestamp; (4) returns an error if the block does not exist, the transfer is invalid, or the subscription is already active. The existing `recordPayment` function may remain for backward compatibility but the new verification path is the primary activation mechanism.",
+      "reqIds": [
+        "REQ-27"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-18",
+      "summary": "Audit and fix the `useVerifyAndActivateSubscription` mutation hook in frontend/src/hooks/useQueries.ts to ensure it correctly obtains the backend actor via `useActor`, converts the block index argument to bigint before calling the Candid method, and handles the case where the actor is not yet available (returning an appropriate error rather than silently failing). Confirm that the mutation's `isPending` / `isLoading` state is properly exposed so SubscriptionPage.tsx can reflect it in the button's disabled and loading states.",
+      "reqIds": [
+        "REQ-31"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-19",
+      "summary": "Fix backend `verifyAndActivateSubscription` in backend/main.mo: the block verification logic fails to detect valid transfer operations, returning 'Block does not contain a transfer operation' even when the user has completed a real ICP transfer. Investigate and fix the block parsing logic — check that the correct transaction type field is being inspected, that the ICP Ledger query method and response structure are correctly decoded, and that the destination account comparison matches the canister's actual treasury Account ID.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-20",
+      "summary": "Fix the `verifyAndActivateSubscription` function in `backend/main.mo` so that it correctly detects and validates ICP transfer operations in a given block. The current implementation returns 'Block does not contain a transfer operation' even when a valid ICP transfer exists in the block. Specifically: (1) Review the ICP Ledger `query_blocks` response structure and ensure the block's transaction type field is accessed by the correct field name — the ICP Ledger returns blocks with a `transaction` field containing an `operation` variant that may be `#Transfer`, `#Mint`, `#Burn`, or `#Approve`; the code must match the exact Motoko variant tag used in the decoded response. (2) Ensure the inter-canister call to the ICP Ledger canister (`ryjl3-tyaaa-aaaaa-aaaba-cai`) uses the correct method (`query_blocks`) and the request/response types are fully and correctly typed in the Motoko actor type definition — missing or misnamed fields in the type annotation cause silent decoding failures that make operation fields appear absent. (3) Verify that the destination account comparison correctly converts the canister's treasury Account ID (derived from the canister's own principal) to the same binary/text format used in the ledger block's `to` field. (4) Confirm the amount threshold check uses `>= 100_000` e8s (0.001 ICP). (5) Add descriptive error variants so failures return meaningful messages such as 'Block not found', 'Transfer amount insufficient', 'Wrong destination address', or 'Already subscribed' instead of the generic 'Block does not contain a transfer operation'.",
+      "reqIds": [
+        "REQ-32"
+      ],
       "status": "pending"
     }
   ],

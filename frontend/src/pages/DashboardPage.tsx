@@ -1,30 +1,31 @@
-import React, { useEffect, useState } from 'react';
-import { useInternetIdentity } from '@/hooks/useInternetIdentity';
-import { deriveICPAddress, deriveEVMAddress } from '@/utils/addressDerivation';
-import WalletAddressCard from '@/components/WalletAddressCard';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Wallet, TrendingUp, ArrowUpRight, ArrowDownLeft, Activity } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useInternetIdentity } from '../hooks/useInternetIdentity';
+import { deriveICPAddress, deriveEVMAddress, truncateAddress } from '../utils/addressDerivation';
+import WalletAddressCard from '../components/WalletAddressCard';
+import { ArrowUpRight, ArrowDownLeft, Clock, Coins } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
+import { getTokens, getNetworks } from '../lib/walletStorage';
 
-interface TokenBalance {
+interface PortfolioToken {
   symbol: string;
-  name: string;
   balance: string;
-  usdValue: string;
-  change24h: string;
+  value: string;
+  change: string;
   positive: boolean;
 }
 
-const MOCK_BALANCES: TokenBalance[] = [
-  { symbol: 'ICP', name: 'Internet Computer', balance: '0.00', usdValue: '$0.00', change24h: '+0.00%', positive: true },
-  { symbol: 'ETH', name: 'Ethereum', balance: '0.00', usdValue: '$0.00', change24h: '+0.00%', positive: true },
-  { symbol: 'BTC', name: 'Bitcoin', balance: '0.00', usdValue: '$0.00', change24h: '+0.00%', positive: true },
+const mockPortfolio: PortfolioToken[] = [
+  { symbol: 'ICP', balance: '125.50', value: '$1,255.00', change: '+5.2%', positive: true },
+  { symbol: 'ETH', balance: '0.85', value: '$2,550.00', change: '-1.3%', positive: false },
+  { symbol: 'USDC', balance: '500.00', value: '$500.00', change: '0.0%', positive: true },
 ];
 
 export default function DashboardPage() {
   const { identity } = useInternetIdentity();
-  const [icpAddress, setIcpAddress] = useState<string>('');
-  const [evmAddress, setEvmAddress] = useState<string>('');
-  const [addressesLoading, setAddressesLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const [icpAddress, setIcpAddress] = useState('');
+  const [evmAddress, setEvmAddress] = useState('');
 
   useEffect(() => {
     if (!identity) {
@@ -32,147 +33,162 @@ export default function DashboardPage() {
       setEvmAddress('');
       return;
     }
-    setAddressesLoading(true);
     const principalText = identity.getPrincipal().toString();
-    const icp = deriveICPAddress(principalText);
-    setIcpAddress(icp);
-    deriveEVMAddress(principalText).then((evm) => {
-      setEvmAddress(evm);
-      setAddressesLoading(false);
-    });
+    setIcpAddress(deriveICPAddress(principalText));
+    deriveEVMAddress(principalText).then(setEvmAddress);
   }, [identity]);
 
-  const isAuthenticated = !!identity;
+  // Load ERC-20 tokens from storage (EVM networks only)
+  const allTokens = getTokens();
+  const networks = getNetworks();
+  const evmNetworkIds = new Set(networks.filter((n) => n.type === 'EVM').map((n) => n.id));
+  const erc20Tokens = allTokens.filter((t) => evmNetworkIds.has(t.networkId));
+
+  const totalMockValue = 4305.0;
+  const erc20Value = erc20Tokens.reduce((sum, t) => {
+    const bal = parseFloat(t.balance ?? '0');
+    return sum + (isNaN(bal) ? 0 : bal);
+  }, 0);
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-background">
+      <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+        {/* Header */}
         <div>
           <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-foreground/60 mt-1">Overview of your crypto wallet</p>
+          <p className="text-muted-foreground mt-1">Manage your multi-chain wallet</p>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/20">
-          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-          <span className="text-xs text-green-400 font-medium">Connected</span>
-        </div>
-      </div>
 
-      {/* Wallet Addresses Section */}
-      {isAuthenticated && (
+        {/* Wallet Addresses */}
         <section>
-          <div className="flex items-center gap-2 mb-4">
-            <Wallet className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-semibold text-foreground">Your Wallet Addresses</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Your Wallet Addresses</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <WalletAddressCard
+              label="ICP Address"
+              address={icpAddress}
+              icon="∞"
+              badgeColor="bg-blue-500/20 text-blue-400"
+            />
+            <WalletAddressCard
+              label="EVM Address"
+              address={evmAddress}
+              icon="⬡"
+              badgeColor="bg-purple-500/20 text-purple-400"
+            />
           </div>
-          <p className="text-sm text-foreground/50 mb-4">
-            These addresses are derived from your Internet Identity. Use them to receive tokens.
-          </p>
-          {addressesLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Skeleton className="h-32 rounded-2xl" />
-              <Skeleton className="h-32 rounded-2xl" />
+        </section>
+
+        {/* Portfolio Summary */}
+        <section>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Portfolio Summary</h2>
+          <div className="bg-card border border-border rounded-2xl p-6 mb-4">
+            <p className="text-muted-foreground text-sm">Total Estimated Value</p>
+            <p className="text-4xl font-bold text-foreground mt-1">
+              ${(totalMockValue + erc20Value).toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </p>
+            <p className="text-sm text-green-400 mt-1">+3.8% (24h)</p>
+          </div>
+
+          {/* Native token balances */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {mockPortfolio.map((token) => (
+              <div
+                key={token.symbol}
+                className="bg-card border border-border rounded-xl p-4 flex flex-col gap-1"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-foreground">{token.symbol}</span>
+                  <span
+                    className={`text-xs font-medium ${
+                      token.positive ? 'text-green-400' : 'text-red-400'
+                    }`}
+                  >
+                    {token.change}
+                  </span>
+                </div>
+                <p className="text-xl font-bold text-foreground">{token.balance}</p>
+                <p className="text-sm text-muted-foreground">{token.value}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* ERC-20 Tokens */}
+          {erc20Tokens.length > 0 && (
+            <div className="mt-4">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
+                <Coins className="w-4 h-4" />
+                ERC-20 Tokens
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {erc20Tokens.map((token) => {
+                  const network = networks.find((n) => n.id === token.networkId);
+                  return (
+                    <div
+                      key={token.id}
+                      className="bg-card border border-border rounded-xl p-4 flex flex-col gap-1"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-foreground">{token.symbol}</span>
+                        <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                          {network?.name ?? token.networkId}
+                        </span>
+                      </div>
+                      <p className="text-xl font-bold text-foreground">{token.balance ?? '0'}</p>
+                      <p className="text-xs text-muted-foreground font-mono">
+                        {truncateAddress(token.contractAddress)}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <WalletAddressCard
-                label="ICP Address"
-                address={icpAddress}
-                icon="∞"
-                badgeColor="bg-blue-500/20 text-blue-400"
-              />
-              <WalletAddressCard
-                label="EVM Address"
-                address={evmAddress}
-                icon="⬡"
-                badgeColor="bg-purple-500/20 text-purple-400"
-              />
+          )}
+
+          {erc20Tokens.length === 0 && (
+            <div className="mt-4 border border-dashed border-border rounded-xl p-4 text-center text-muted-foreground text-sm">
+              No ERC-20 tokens added yet.{' '}
+              <button
+                className="text-primary underline underline-offset-2"
+                onClick={() => navigate({ to: '/tokens' })}
+              >
+                Add tokens
+              </button>{' '}
+              to track ERC-20 balances.
             </div>
           )}
         </section>
-      )}
 
-      {/* Portfolio Summary */}
-      <section>
-        <div className="flex items-center gap-2 mb-4">
-          <TrendingUp className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-semibold text-foreground">Portfolio</h2>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <div className="glass-card rounded-2xl p-5 border border-white/10 bg-white/5 backdrop-blur-md">
-            <p className="text-xs text-foreground/50 mb-1">Total Balance</p>
-            <p className="text-2xl font-bold text-foreground">$0.00</p>
-            <p className="text-xs text-foreground/40 mt-1">USD equivalent</p>
-          </div>
-          <div className="glass-card rounded-2xl p-5 border border-white/10 bg-white/5 backdrop-blur-md">
-            <p className="text-xs text-foreground/50 mb-1">24h Change</p>
-            <p className="text-2xl font-bold text-green-400">+$0.00</p>
-            <p className="text-xs text-foreground/40 mt-1">+0.00%</p>
-          </div>
-          <div className="glass-card rounded-2xl p-5 border border-white/10 bg-white/5 backdrop-blur-md">
-            <p className="text-xs text-foreground/50 mb-1">Assets</p>
-            <p className="text-2xl font-bold text-foreground">{MOCK_BALANCES.length}</p>
-            <p className="text-xs text-foreground/40 mt-1">Tracked tokens</p>
-          </div>
-        </div>
-
-        {/* Token List */}
-        <div className="space-y-3">
-          {MOCK_BALANCES.map((token) => (
-            <div
-              key={token.symbol}
-              className="glass-card rounded-xl p-4 border border-white/10 bg-white/5 backdrop-blur-md flex items-center justify-between"
+        {/* Quick Actions */}
+        <section>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <button
+              onClick={() => navigate({ to: '/send' })}
+              className="flex items-center gap-3 bg-primary text-primary-foreground rounded-xl p-4 hover:opacity-90 transition-opacity"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary text-sm">
-                  {token.symbol.slice(0, 2)}
-                </div>
-                <div>
-                  <p className="font-semibold text-foreground text-sm">{token.symbol}</p>
-                  <p className="text-xs text-foreground/50">{token.name}</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="font-semibold text-foreground text-sm">{token.balance}</p>
-                <p className="text-xs text-foreground/50">{token.usdValue}</p>
-              </div>
-              <div className="text-right ml-4">
-                <p className={`text-xs font-medium ${token.positive ? 'text-green-400' : 'text-red-400'}`}>
-                  {token.change24h}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Quick Actions */}
-      <section>
-        <div className="flex items-center gap-2 mb-4">
-          <Activity className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-semibold text-foreground">Quick Actions</h2>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <button className="glass-card rounded-2xl p-5 border border-white/10 bg-white/5 backdrop-blur-md flex items-center gap-3 hover:bg-white/10 transition-colors text-left">
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-              <ArrowUpRight className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <p className="font-semibold text-foreground text-sm">Send</p>
-              <p className="text-xs text-foreground/50">Transfer tokens</p>
-            </div>
-          </button>
-          <button className="glass-card rounded-2xl p-5 border border-white/10 bg-white/5 backdrop-blur-md flex items-center gap-3 hover:bg-white/10 transition-colors text-left">
-            <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
-              <ArrowDownLeft className="w-5 h-5 text-green-400" />
-            </div>
-            <div>
-              <p className="font-semibold text-foreground text-sm">Receive</p>
-              <p className="text-xs text-foreground/50">Show your address</p>
-            </div>
-          </button>
-        </div>
-      </section>
+              <ArrowUpRight className="w-5 h-5" />
+              <span className="font-medium">Send</span>
+            </button>
+            <button
+              onClick={() => navigate({ to: '/networks' })}
+              className="flex items-center gap-3 bg-card border border-border text-foreground rounded-xl p-4 hover:bg-muted transition-colors"
+            >
+              <ArrowDownLeft className="w-5 h-5" />
+              <span className="font-medium">Receive</span>
+            </button>
+            <button
+              onClick={() => navigate({ to: '/history' })}
+              className="flex items-center gap-3 bg-card border border-border text-foreground rounded-xl p-4 hover:bg-muted transition-colors"
+            >
+              <Clock className="w-5 h-5" />
+              <span className="font-medium">History</span>
+            </button>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

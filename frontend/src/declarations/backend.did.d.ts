@@ -10,6 +10,16 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export type Result = { 'ok' : SubscriptionRecord } |
+  { 'error' : string };
+export interface SubscriptionRecord {
+  'status' : { 'active' : null } |
+    { 'expired' : null } |
+    { 'pending' : null },
+  'paidAmount' : bigint,
+  'paidAt' : bigint,
+  'principalId' : string,
+}
 export interface UserProfile { 'userName' : string, 'description' : string }
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
@@ -45,9 +55,22 @@ export interface _SERVICE {
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getSubscriptionStatus' : ActorMethod<[Principal], Result>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'isSubscribed' : ActorMethod<[Principal], boolean>,
+  'recordPayment' : ActorMethod<[Principal, bigint], Result>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'verifyAndActivateSubscription' : ActorMethod<
+    [bigint],
+    { 'ok' : string } |
+      { 'insufficientAmount' : string } |
+      { 'blockNotFound' : bigint } |
+      { 'invalidBlock' : bigint } |
+      { 'wrongAddress' : string } |
+      { 'alreadySubscribed' : null } |
+      { 'exceedsMaximumSubscriptionTime' : string }
+  >,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

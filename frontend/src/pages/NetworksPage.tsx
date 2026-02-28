@@ -1,112 +1,120 @@
-import React, { useEffect, useState } from 'react';
-import { Globe, Copy, Check } from 'lucide-react';
-import { toast } from 'sonner';
-import { useInternetIdentity } from '@/hooks/useInternetIdentity';
-import { deriveICPAddress, deriveEVMAddress, truncateAddress } from '@/utils/addressDerivation';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { useEffect, useState } from 'react';
+import { useInternetIdentity } from '../hooks/useInternetIdentity';
+import { deriveICPAddress, deriveEVMAddress, truncateAddress } from '../utils/addressDerivation';
+import { getNetworks, getTokensByNetwork, type NetworkConfig } from '../lib/walletStorage';
+import { Copy, Check, ExternalLink, Coins } from 'lucide-react';
 
-interface Network {
-  id: string;
-  name: string;
-  symbol: string;
-  type: 'ICP' | 'EVM';
-  chainId: string;
-  rpc?: string;
-  explorer?: string;
-  color: string;
-}
-
-const NETWORKS: Network[] = [
-  {
-    id: 'icp',
-    name: 'Internet Computer',
-    symbol: 'ICP',
-    type: 'ICP',
-    chainId: 'icp',
-    explorer: 'https://dashboard.internetcomputer.org',
-    color: 'bg-blue-500/20 text-blue-400',
-  },
-  {
-    id: 'ethereum',
-    name: 'Ethereum',
-    symbol: 'ETH',
-    type: 'EVM',
-    chainId: '1',
-    rpc: 'https://mainnet.infura.io',
-    explorer: 'https://etherscan.io',
-    color: 'bg-purple-500/20 text-purple-400',
-  },
-  {
-    id: 'bsc',
-    name: 'BNB Smart Chain',
-    symbol: 'BNB',
-    type: 'EVM',
-    chainId: '56',
-    rpc: 'https://bsc-dataseed.binance.org',
-    explorer: 'https://bscscan.com',
-    color: 'bg-yellow-500/20 text-yellow-400',
-  },
-  {
-    id: 'polygon',
-    name: 'Polygon',
-    symbol: 'MATIC',
-    type: 'EVM',
-    chainId: '137',
-    rpc: 'https://polygon-rpc.com',
-    explorer: 'https://polygonscan.com',
-    color: 'bg-violet-500/20 text-violet-400',
-  },
-  {
-    id: 'arbitrum',
-    name: 'Arbitrum One',
-    symbol: 'ARB',
-    type: 'EVM',
-    chainId: '42161',
-    rpc: 'https://arb1.arbitrum.io/rpc',
-    explorer: 'https://arbiscan.io',
-    color: 'bg-cyan-500/20 text-cyan-400',
-  },
-];
-
-function CopyAddressButton({ address, label }: { address: string; label: string }) {
+function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
-
-  const handleCopy = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    try {
-      await navigator.clipboard.writeText(address);
-      setCopied(true);
-      toast.success(`${label} address copied`);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast.error('Failed to copy');
-    }
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
-
   return (
     <button
       onClick={handleCopy}
-      className="p-1 rounded hover:bg-white/10 transition-colors text-foreground/50 hover:text-foreground"
+      className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-muted-foreground hover:text-foreground"
       title="Copy address"
     >
-      {copied ? (
-        <Check className="w-3.5 h-3.5 text-green-400" />
-      ) : (
-        <Copy className="w-3.5 h-3.5" />
-      )}
+      {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
     </button>
+  );
+}
+
+function NetworkCard({
+  network,
+  address,
+}: {
+  network: NetworkConfig;
+  address: string;
+}) {
+  const tokens = getTokensByNetwork(network.id);
+
+  return (
+    <div className="bg-card border border-border rounded-xl p-5 space-y-4">
+      {/* Header */}
+      <div className="flex items-start justify-between">
+        <div>
+          <h3 className="font-semibold text-foreground text-lg">{network.name}</h3>
+          <div className="flex items-center gap-2 mt-1">
+            <span
+              className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                network.type === 'ICP'
+                  ? 'bg-blue-500/20 text-blue-400'
+                  : 'bg-purple-500/20 text-purple-400'
+              }`}
+            >
+              {network.type}
+            </span>
+            {network.chainId && (
+              <span className="text-xs text-muted-foreground">Chain ID: {network.chainId}</span>
+            )}
+          </div>
+        </div>
+        {network.explorerUrl && (
+          <a
+            href={network.explorerUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+            title="Open explorer"
+          >
+            <ExternalLink className="w-4 h-4" />
+          </a>
+        )}
+      </div>
+
+      {/* Address */}
+      <div className="bg-muted/50 rounded-lg p-3">
+        <p className="text-xs text-muted-foreground mb-1">Your Address</p>
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-mono text-sm text-foreground break-all">{address || '—'}</span>
+          {address && <CopyButton text={address} />}
+        </div>
+      </div>
+
+      {/* ERC-20 Tokens (EVM only) */}
+      {network.type === 'EVM' && (
+        <div>
+          <div className="flex items-center gap-1.5 mb-2">
+            <Coins className="w-3.5 h-3.5 text-muted-foreground" />
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              ERC-20 Tokens
+            </p>
+          </div>
+          {tokens.length === 0 ? (
+            <p className="text-xs text-muted-foreground italic">No custom tokens added</p>
+          ) : (
+            <div className="space-y-2">
+              {tokens.map((token) => (
+                <div
+                  key={token.id}
+                  className="flex items-center justify-between bg-muted/30 rounded-lg px-3 py-2"
+                >
+                  <div>
+                    <span className="text-sm font-semibold text-foreground">{token.symbol}</span>
+                    <p className="text-xs text-muted-foreground font-mono">
+                      {truncateAddress(token.contractAddress)}
+                    </p>
+                  </div>
+                  <span className="text-sm font-medium text-foreground">{token.balance ?? '0'}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
 export default function NetworksPage() {
   const { identity } = useInternetIdentity();
-  const [icpAddress, setIcpAddress] = useState<string>('');
-  const [evmAddress, setEvmAddress] = useState<string>('');
+  const networks = getNetworks();
+
+  const [icpAddress, setIcpAddress] = useState('');
+  const [evmAddress, setEvmAddress] = useState('');
 
   useEffect(() => {
     if (!identity) {
@@ -119,101 +127,25 @@ export default function NetworksPage() {
     deriveEVMAddress(principalText).then(setEvmAddress);
   }, [identity]);
 
-  const getAddressForNetwork = (network: Network): string => {
-    if (network.type === 'ICP') return icpAddress;
-    return evmAddress;
-  };
-
-  const isAuthenticated = !!identity;
-
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <Globe className="w-6 h-6 text-primary" />
+    <div className="min-h-screen bg-background">
+      <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Networks</h1>
-          <p className="text-foreground/60 mt-0.5">Supported blockchain networks and your associated addresses</p>
+          <p className="text-muted-foreground mt-1">
+            Supported blockchain networks and your derived addresses
+          </p>
         </div>
-      </div>
 
-      {/* Network Cards */}
-      <div className="space-y-3">
-        {NETWORKS.map((network) => {
-          const address = getAddressForNetwork(network);
-          return (
-            <div
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {networks.map((network) => (
+            <NetworkCard
               key={network.id}
-              className="glass-card rounded-2xl p-5 border border-white/10 bg-white/5 backdrop-blur-md"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                {/* Network Info */}
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${network.color}`}>
-                    {network.symbol.slice(0, 2)}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-semibold text-foreground">{network.name}</p>
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${network.color}`}>
-                        {network.type}
-                      </span>
-                    </div>
-                    <p className="text-xs text-foreground/50">
-                      {network.type === 'ICP' ? 'Chain: Internet Computer' : `Chain ID: ${network.chainId}`}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Associated Address */}
-                {isAuthenticated && address ? (
-                  <div className="flex items-center gap-2 min-w-0 sm:max-w-xs">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-foreground/40 mb-0.5">Your Address</p>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <p className="font-mono text-xs text-foreground/70 truncate cursor-default">
-                              {truncateAddress(address, 10, 6)}
-                            </p>
-                          </TooltipTrigger>
-                          <TooltipContent side="top" className="max-w-xs break-all font-mono text-xs">
-                            {address}
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                    <CopyAddressButton address={address} label={network.name} />
-                  </div>
-                ) : isAuthenticated ? (
-                  <div className="text-xs text-foreground/30 italic">Deriving address...</div>
-                ) : (
-                  <div className="text-xs text-foreground/30 italic">Login to see your address</div>
-                )}
-
-                {/* Explorer Link */}
-                {network.explorer && (
-                  <a
-                    href={network.explorer}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-primary hover:underline shrink-0"
-                  >
-                    Explorer ↗
-                  </a>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Info Note */}
-      <div className="rounded-xl p-4 border border-primary/20 bg-primary/5 text-sm text-foreground/60">
-        <p className="font-medium text-foreground/80 mb-1">About your addresses</p>
-        <p>
-          Your ICP address is your Internet Identity principal. Your EVM address is deterministically derived from your principal — it is consistent across all EVM-compatible networks and does not require a separate private key.
-        </p>
+              network={network}
+              address={network.type === 'ICP' ? icpAddress : evmAddress}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -6,9 +6,11 @@ import {
   RouterProvider,
   Outlet,
   redirect,
+  useNavigate,
+  useLocation,
 } from '@tanstack/react-router';
 import { useInternetIdentity } from './hooks/useInternetIdentity';
-import { useGetCallerUserProfile } from './hooks/useQueries';
+import { useGetCallerUserProfile, useIsSubscribed, useWhitelistMigration } from './hooks/useQueries';
 import Navbar from './components/Navbar';
 import UserProfileSetup from './components/UserProfileSetup';
 import LoginPage from './pages/LoginPage';
@@ -16,17 +18,39 @@ import DashboardPage from './pages/DashboardPage';
 import NetworksPage from './pages/NetworksPage';
 import TokensPage from './pages/TokensPage';
 import WatchlistPage from './pages/WatchlistPage';
+import WhitelistPage from './pages/WhitelistPage';
 import SendPage from './pages/SendPage';
 import TransactionHistoryPage from './pages/TransactionHistoryPage';
+import SubscriptionPage from './pages/SubscriptionPage';
 import { Toaster } from '@/components/ui/sonner';
+import { useEffect } from 'react';
+
+// Protected routes that require an active subscription
+const PROTECTED_PATHS = ['/dashboard', '/networks', '/tokens', '/watchlist', '/whitelist', '/send', '/history'];
 
 // ─── Layout wrapper for authenticated pages ───────────────────────────────────
 function AuthLayout() {
   const { identity, isInitializing } = useInternetIdentity();
   const { data: userProfile, isLoading: profileLoading, isFetched } = useGetCallerUserProfile();
+  const { data: isSubscribed, isLoading: subscriptionLoading } = useIsSubscribed();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Run whitelist migration once on startup
+  useWhitelistMigration();
 
   const isAuthenticated = !!identity;
   const showProfileSetup = isAuthenticated && !profileLoading && isFetched && userProfile === null;
+
+  // Redirect unsubscribed users away from protected routes
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    if (subscriptionLoading) return;
+    const isProtected = PROTECTED_PATHS.some((p) => location.pathname.startsWith(p));
+    if (isProtected && isSubscribed === false) {
+      navigate({ to: '/subscription' });
+    }
+  }, [isAuthenticated, isSubscribed, subscriptionLoading, location.pathname, navigate]);
 
   if (isInitializing) {
     return (
@@ -116,6 +140,12 @@ const watchlistRoute = createRoute({
   component: WatchlistPage,
 });
 
+const whitelistRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/whitelist',
+  component: WhitelistPage,
+});
+
 const sendRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/send',
@@ -128,14 +158,22 @@ const historyRoute = createRoute({
   component: TransactionHistoryPage,
 });
 
+const subscriptionRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/subscription',
+  component: SubscriptionPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   dashboardRoute,
   networksRoute,
   tokensRoute,
   watchlistRoute,
+  whitelistRoute,
   sendRoute,
   historyRoute,
+  subscriptionRoute,
 ]);
 
 const router = createRouter({ routeTree });
@@ -146,21 +184,11 @@ declare module '@tanstack/react-router' {
   }
 }
 
-// ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
   return (
     <>
       <RouterProvider router={router} />
-      <Toaster
-        position="bottom-right"
-        toastOptions={{
-          style: {
-            background: 'oklch(0.18 0.012 240)',
-            border: '1px solid oklch(0.28 0.015 240)',
-            color: 'oklch(0.90 0.01 240)',
-          },
-        }}
-      />
+      <Toaster richColors position="top-right" />
     </>
   );
 }

@@ -13,6 +13,8 @@ import {
   Menu,
   X,
   ChevronDown,
+  BookUser,
+  Shield,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -29,8 +31,10 @@ const navItems = [
   { path: '/networks', label: 'Networks', icon: Globe },
   { path: '/tokens', label: 'Tokens', icon: Coins },
   { path: '/watchlist', label: 'Watchlist', icon: Eye },
+  { path: '/whitelist', label: 'Whitelist', icon: BookUser },
   { path: '/send', label: 'Send', icon: Send },
   { path: '/history', label: 'History', icon: History },
+  { path: '/subscription', label: 'Subscription', icon: Shield },
 ];
 
 export default function Navbar() {

@@ -89,25 +89,43 @@ export class ExternalBlob {
         return this;
     }
 }
-export interface UserProfile {
-    userName: string;
-    description: string;
+export type Result = {
+    __kind__: "ok";
+    ok: SubscriptionRecord;
+} | {
+    __kind__: "error";
+    error: string;
+};
+export interface _CaffeineStorageRefillInformation {
+    proposed_top_up_amount?: bigint;
+}
+export interface SubscriptionRecord {
+    status: Variant_active_expired_pending;
+    paidAmount: bigint;
+    paidAt: bigint;
+    principalId: string;
 }
 export interface _CaffeineStorageCreateCertificateResult {
     method: string;
     blob_hash: string;
 }
+export interface UserProfile {
+    userName: string;
+    description: string;
+}
 export interface _CaffeineStorageRefillResult {
     success?: boolean;
     topped_up_amount?: bigint;
-}
-export interface _CaffeineStorageRefillInformation {
-    proposed_top_up_amount?: bigint;
 }
 export enum UserRole {
     admin = "admin",
     user = "user",
     guest = "guest"
+}
+export enum Variant_active_expired_pending {
+    active = "active",
+    expired = "expired",
+    pending = "pending"
 }
 export interface backendInterface {
     _caffeineStorageBlobIsLive(hash: Uint8Array): Promise<boolean>;
@@ -120,11 +138,36 @@ export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
+    getSubscriptionStatus(principal: Principal): Promise<Result>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
+    isSubscribed(principal: Principal): Promise<boolean>;
+    recordPayment(principal: Principal, amount: bigint): Promise<Result>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    verifyAndActivateSubscription(blockIndex: bigint): Promise<{
+        __kind__: "ok";
+        ok: string;
+    } | {
+        __kind__: "insufficientAmount";
+        insufficientAmount: string;
+    } | {
+        __kind__: "blockNotFound";
+        blockNotFound: bigint;
+    } | {
+        __kind__: "invalidBlock";
+        invalidBlock: bigint;
+    } | {
+        __kind__: "wrongAddress";
+        wrongAddress: string;
+    } | {
+        __kind__: "alreadySubscribed";
+        alreadySubscribed: null;
+    } | {
+        __kind__: "exceedsMaximumSubscriptionTime";
+        exceedsMaximumSubscriptionTime: string;
+    }>;
 }
-import type { UserProfile as _UserProfile, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
+import type { Result as _Result, SubscriptionRecord as _SubscriptionRecord, UserProfile as _UserProfile, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _caffeineStorageBlobIsLive(arg0: Uint8Array): Promise<boolean> {
@@ -267,6 +310,20 @@ export class Backend implements backendInterface {
             return from_candid_UserRole_n11(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getSubscriptionStatus(arg0: Principal): Promise<Result> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getSubscriptionStatus(arg0);
+                return from_candid_Result_n13(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getSubscriptionStatus(arg0);
+            return from_candid_Result_n13(this._uploadFile, this._downloadFile, result);
+        }
+    }
     async getUserProfile(arg0: Principal): Promise<UserProfile | null> {
         if (this.processError) {
             try {
@@ -295,6 +352,34 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async isSubscribed(arg0: Principal): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.isSubscribed(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.isSubscribed(arg0);
+            return result;
+        }
+    }
+    async recordPayment(arg0: Principal, arg1: bigint): Promise<Result> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.recordPayment(arg0, arg1);
+                return from_candid_Result_n13(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.recordPayment(arg0, arg1);
+            return from_candid_Result_n13(this._uploadFile, this._downloadFile, result);
+        }
+    }
     async saveCallerUserProfile(arg0: UserProfile): Promise<void> {
         if (this.processError) {
             try {
@@ -309,6 +394,47 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async verifyAndActivateSubscription(arg0: bigint): Promise<{
+        __kind__: "ok";
+        ok: string;
+    } | {
+        __kind__: "insufficientAmount";
+        insufficientAmount: string;
+    } | {
+        __kind__: "blockNotFound";
+        blockNotFound: bigint;
+    } | {
+        __kind__: "invalidBlock";
+        invalidBlock: bigint;
+    } | {
+        __kind__: "wrongAddress";
+        wrongAddress: string;
+    } | {
+        __kind__: "alreadySubscribed";
+        alreadySubscribed: null;
+    } | {
+        __kind__: "exceedsMaximumSubscriptionTime";
+        exceedsMaximumSubscriptionTime: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.verifyAndActivateSubscription(arg0);
+                return from_candid_variant_n18(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.verifyAndActivateSubscription(arg0);
+            return from_candid_variant_n18(this._uploadFile, this._downloadFile, result);
+        }
+    }
+}
+function from_candid_Result_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Result): Result {
+    return from_candid_variant_n14(_uploadFile, _downloadFile, value);
+}
+function from_candid_SubscriptionRecord_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _SubscriptionRecord): SubscriptionRecord {
+    return from_candid_record_n16(_uploadFile, _downloadFile, value);
 }
 function from_candid_UserRole_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
     return from_candid_variant_n12(_uploadFile, _downloadFile, value);
@@ -324,6 +450,30 @@ function from_candid_opt_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Ar
 }
 function from_candid_opt_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [bigint]): bigint | null {
     return value.length === 0 ? null : value[0];
+}
+function from_candid_record_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    status: {
+        active: null;
+    } | {
+        expired: null;
+    } | {
+        pending: null;
+    };
+    paidAmount: bigint;
+    paidAt: bigint;
+    principalId: string;
+}): {
+    status: Variant_active_expired_pending;
+    paidAmount: bigint;
+    paidAt: bigint;
+    principalId: string;
+} {
+    return {
+        status: from_candid_variant_n17(_uploadFile, _downloadFile, value.status),
+        paidAmount: value.paidAmount,
+        paidAt: value.paidAt,
+        principalId: value.principalId
+    };
 }
 function from_candid_record_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     success: [] | [boolean];
@@ -345,6 +495,93 @@ function from_candid_variant_n12(_uploadFile: (file: ExternalBlob) => Promise<Ui
     guest: null;
 }): UserRole {
     return "admin" in value ? UserRole.admin : "user" in value ? UserRole.user : "guest" in value ? UserRole.guest : value;
+}
+function from_candid_variant_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    ok: _SubscriptionRecord;
+} | {
+    error: string;
+}): {
+    __kind__: "ok";
+    ok: SubscriptionRecord;
+} | {
+    __kind__: "error";
+    error: string;
+} {
+    return "ok" in value ? {
+        __kind__: "ok",
+        ok: from_candid_SubscriptionRecord_n15(_uploadFile, _downloadFile, value.ok)
+    } : "error" in value ? {
+        __kind__: "error",
+        error: value.error
+    } : value;
+}
+function from_candid_variant_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    active: null;
+} | {
+    expired: null;
+} | {
+    pending: null;
+}): Variant_active_expired_pending {
+    return "active" in value ? Variant_active_expired_pending.active : "expired" in value ? Variant_active_expired_pending.expired : "pending" in value ? Variant_active_expired_pending.pending : value;
+}
+function from_candid_variant_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    ok: string;
+} | {
+    insufficientAmount: string;
+} | {
+    blockNotFound: bigint;
+} | {
+    invalidBlock: bigint;
+} | {
+    wrongAddress: string;
+} | {
+    alreadySubscribed: null;
+} | {
+    exceedsMaximumSubscriptionTime: string;
+}): {
+    __kind__: "ok";
+    ok: string;
+} | {
+    __kind__: "insufficientAmount";
+    insufficientAmount: string;
+} | {
+    __kind__: "blockNotFound";
+    blockNotFound: bigint;
+} | {
+    __kind__: "invalidBlock";
+    invalidBlock: bigint;
+} | {
+    __kind__: "wrongAddress";
+    wrongAddress: string;
+} | {
+    __kind__: "alreadySubscribed";
+    alreadySubscribed: null;
+} | {
+    __kind__: "exceedsMaximumSubscriptionTime";
+    exceedsMaximumSubscriptionTime: string;
+} {
+    return "ok" in value ? {
+        __kind__: "ok",
+        ok: value.ok
+    } : "insufficientAmount" in value ? {
+        __kind__: "insufficientAmount",
+        insufficientAmount: value.insufficientAmount
+    } : "blockNotFound" in value ? {
+        __kind__: "blockNotFound",
+        blockNotFound: value.blockNotFound
+    } : "invalidBlock" in value ? {
+        __kind__: "invalidBlock",
+        invalidBlock: value.invalidBlock
+    } : "wrongAddress" in value ? {
+        __kind__: "wrongAddress",
+        wrongAddress: value.wrongAddress
+    } : "alreadySubscribed" in value ? {
+        __kind__: "alreadySubscribed",
+        alreadySubscribed: value.alreadySubscribed
+    } : "exceedsMaximumSubscriptionTime" in value ? {
+        __kind__: "exceedsMaximumSubscriptionTime",
+        exceedsMaximumSubscriptionTime: value.exceedsMaximumSubscriptionTime
+    } : value;
 }
 function to_candid_UserRole_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
     return to_candid_variant_n9(_uploadFile, _downloadFile, value);

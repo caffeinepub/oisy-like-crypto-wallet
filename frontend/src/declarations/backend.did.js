@@ -28,6 +28,20 @@ export const UserProfile = IDL.Record({
   'userName' : IDL.Text,
   'description' : IDL.Text,
 });
+export const SubscriptionRecord = IDL.Record({
+  'status' : IDL.Variant({
+    'active' : IDL.Null,
+    'expired' : IDL.Null,
+    'pending' : IDL.Null,
+  }),
+  'paidAmount' : IDL.Nat,
+  'paidAt' : IDL.Int,
+  'principalId' : IDL.Text,
+});
+export const Result = IDL.Variant({
+  'ok' : SubscriptionRecord,
+  'error' : IDL.Text,
+});
 
 export const idlService = IDL.Service({
   '_caffeineStorageBlobIsLive' : IDL.Func(
@@ -60,13 +74,31 @@ export const idlService = IDL.Service({
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getSubscriptionStatus' : IDL.Func([IDL.Principal], [Result], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'isSubscribed' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
+  'recordPayment' : IDL.Func([IDL.Principal, IDL.Nat], [Result], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'verifyAndActivateSubscription' : IDL.Func(
+      [IDL.Nat],
+      [
+        IDL.Variant({
+          'ok' : IDL.Text,
+          'insufficientAmount' : IDL.Text,
+          'blockNotFound' : IDL.Nat,
+          'invalidBlock' : IDL.Nat,
+          'wrongAddress' : IDL.Text,
+          'alreadySubscribed' : IDL.Null,
+          'exceedsMaximumSubscriptionTime' : IDL.Text,
+        }),
+      ],
+      [],
+    ),
 });
 
 export const idlInitArgs = [];
@@ -92,6 +124,17 @@ export const idlFactory = ({ IDL }) => {
     'userName' : IDL.Text,
     'description' : IDL.Text,
   });
+  const SubscriptionRecord = IDL.Record({
+    'status' : IDL.Variant({
+      'active' : IDL.Null,
+      'expired' : IDL.Null,
+      'pending' : IDL.Null,
+    }),
+    'paidAmount' : IDL.Nat,
+    'paidAt' : IDL.Int,
+    'principalId' : IDL.Text,
+  });
+  const Result = IDL.Variant({ 'ok' : SubscriptionRecord, 'error' : IDL.Text });
   
   return IDL.Service({
     '_caffeineStorageBlobIsLive' : IDL.Func(
@@ -124,13 +167,31 @@ export const idlFactory = ({ IDL }) => {
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getSubscriptionStatus' : IDL.Func([IDL.Principal], [Result], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'isSubscribed' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
+    'recordPayment' : IDL.Func([IDL.Principal, IDL.Nat], [Result], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'verifyAndActivateSubscription' : IDL.Func(
+        [IDL.Nat],
+        [
+          IDL.Variant({
+            'ok' : IDL.Text,
+            'insufficientAmount' : IDL.Text,
+            'blockNotFound' : IDL.Nat,
+            'invalidBlock' : IDL.Nat,
+            'wrongAddress' : IDL.Text,
+            'alreadySubscribed' : IDL.Null,
+            'exceedsMaximumSubscriptionTime' : IDL.Text,
+          }),
+        ],
+        [],
+      ),
   });
 };
 

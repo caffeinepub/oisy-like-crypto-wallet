@@ -1,58 +1,6 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Display user's own ICP and EVM wallet addresses after login",
-  "requirements": [
-    {
-      "id": "REQ-8",
-      "summary": "Derive and display user's ICP and EVM wallet addresses on Dashboard after Internet Identity login with copy-to-clipboard functionality",
-      "acceptanceCriteria": [
-        "After logging in with Internet Identity, the Dashboard displays a dedicated 'Your Wallet Addresses' section.",
-        "The ICP account address (derived from the authenticated principal) is displayed with a 'ICP Address' label and a copy-to-clipboard button.",
-        "An EVM-compatible address (deterministically derived from the principal, e.g., by hashing the principal bytes and taking the last 20 bytes as a 0x-prefixed hex string) is displayed with an 'EVM Address' label and a copy-to-clipboard button.",
-        "Both addresses are displayed in full or with a truncated-with-tooltip format for readability.",
-        "Clicking the copy button copies the full address to clipboard and shows a brief confirmation toast.",
-        "The section is only visible when the user is authenticated; unauthenticated users see the login prompt.",
-        "The addresses are consistent across page reloads for the same logged-in principal."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/utils/addressDerivation.ts",
-          "operation": "create",
-          "description": "Create utility module for deriving ICP account address and EVM-compatible address from a Principal. Implement deterministic EVM address derivation by hashing the principal bytes (using SHA-256) and taking the last 20 bytes as a 0x-prefixed hex string. Implement ICP account address derivation using the principal's toText() or AccountIdentifier if available. These functions must be pure and reproducible."
-        },
-        {
-          "path": "frontend/src/components/WalletAddressCard.tsx",
-          "operation": "create",
-          "description": "Create a reusable card component that displays a wallet address (ICP or EVM) with a label, full address display (or truncated with tooltip), and a copy-to-clipboard button. On copy, trigger a toast notification confirming the copy action. Use the GlassCard component for styling consistency and integrate with the toast system already present in the app."
-        },
-        {
-          "path": "frontend/src/pages/DashboardPage.tsx",
-          "operation": "modify",
-          "description": "Add a 'Your Wallet Addresses' section to the Dashboard that is only visible when the user is authenticated. Use the useInternetIdentity hook to get the current identity/principal. Derive both ICP and EVM addresses using the new addressDerivation utility. Render two WalletAddressCard components side-by-side (responsive grid layout) displaying the ICP address and EVM address respectively. Position this section prominently near the top of the dashboard, above or alongside the existing summary stats."
-        }
-      ]
-    },
-    {
-      "id": "REQ-9",
-      "summary": "Pre-populate Send form and Networks page with user's derived ICP and EVM addresses",
-      "acceptanceCriteria": [
-        "On the Networks page, the user's ICP address is shown as the associated address for ICP/Internet Computer network rows, and the EVM address is shown for Ethereum/EVM network rows.",
-        "On the Send page, the 'From' address is automatically populated with the corresponding derived address based on the selected network/chain.",
-        "The derived addresses displayed in all locations are identical to those shown on the Dashboard's 'Your Wallet Addresses' section."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/NetworksPage.tsx",
-          "operation": "modify",
-          "description": "Modify the NetworksPage to derive and display the user's associated address for each network row. Use the addressDerivation utility to get the ICP address and EVM address from the authenticated principal. For networks with type 'ICP' or chainId 'icp', display the ICP address. For networks with type 'EVM' or Ethereum-based chainIds, display the EVM address. Add an 'Associated Address' column to the network table/list with truncated address display and optional copy-to-clipboard icon. Ensure addresses are only shown when the user is authenticated."
-        },
-        {
-          "path": "frontend/src/pages/SendPage.tsx",
-          "operation": "modify",
-          "description": "Modify the SendPage to auto-populate the 'From' address field based on the selected network. Use the addressDerivation utility and the useInternetIdentity hook to derive the appropriate address. When the user selects a network, determine if it is ICP-based or EVM-based and populate the sender address field with the corresponding derived address (ICP or EVM). Make the 'From' field read-only or display-only since users send from their own derived address. Ensure the derived address matches those shown on the Dashboard and Networks page."
-        }
-      ]
-    }
-  ]
+  "title": "Fix verifyAndActivateSubscription block parsing logic in backend",
+  "requirements": []
 }

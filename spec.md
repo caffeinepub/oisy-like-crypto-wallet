@@ -1,13 +1,14 @@
 # Specification
 
 ## Summary
-**Goal:** After login, derive and display the user's ICP and EVM wallet addresses across the app so they can receive and send tokens.
+**Goal:** Fix the `verifyAndActivateSubscription` function in `backend/main.mo` so it correctly parses ICP Ledger block responses and validates ICP transfer operations.
 
 **Planned changes:**
-- Add a "Your Wallet Addresses" section to the Dashboard, showing the user's ICP account address (derived from their principal) and a deterministic EVM-compatible address (derived by hashing the principal bytes and taking the last 20 bytes as a 0x-prefixed hex string), each with a copy-to-clipboard button and a confirmation toast.
-- Display addresses in full or truncated-with-tooltip format; section is only visible when authenticated.
-- On the Networks page, show the user's ICP address for ICP/Internet Computer network rows and the EVM address for Ethereum/EVM network rows.
-- On the Send page, auto-populate the "From" address field with the appropriate derived address based on the selected network.
-- All address derivation is purely client-side; addresses are consistent across reloads for the same principal.
+- Correct the Motoko actor type definition for the ICP Ledger (`ryjl3-tyaaa-aaaaa-aaaba-cai`) to include all required fields for `QueryBlocksResponse`, `Block`, `Transaction`, and `Operation` types with accurate field names
+- Fix the block parsing logic to correctly access the `transaction.operation` variant and match the `#Transfer` tag as returned by the ICP Ledger
+- Fix the treasury account ID comparison so it uses the same binary/text format as the `to` field stored in the ledger block
+- Ensure the amount check verifies the transfer is >= 100,000 e8s (0.001 ICP)
+- Replace the generic "Block does not contain a transfer operation" error with descriptive variants: "Block not found", "Transfer amount insufficient", "Wrong destination address", and "Subscription already active"
+- Preserve the existing `recordPayment` function without modification
 
-**User-visible outcome:** After logging in, users can view, copy, and use their ICP and EVM wallet addresses throughout the app — on the Dashboard, Networks page, and Send form — enabling them to receive and send tokens.
+**User-visible outcome:** After sending 0.001 ICP to the treasury address and obtaining the block index, calling `verifyAndActivateSubscription(blockIndex)` will correctly detect the transfer and activate the subscription instead of returning a false-negative error.

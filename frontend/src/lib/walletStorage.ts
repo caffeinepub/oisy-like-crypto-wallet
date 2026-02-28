@@ -1,25 +1,27 @@
-// Wallet data types and localStorage persistence helpers
+// Wallet storage utilities using localStorage
 
 export interface NetworkConfig {
   id: string;
   name: string;
-  symbol: string;
-  rpcUrl: string;
-  explorerUrl: string;
+  type: 'ICP' | 'EVM';
   chainId?: number;
-  isCustomRpc: boolean;
-  color: string;
-  icon: string;
+  symbol: string;
+  explorerUrl?: string;
+  color?: string;
+  icon?: string;
+  rpcUrl?: string;
+  isCustomRpc?: boolean;
 }
 
 export interface TokenConfig {
   id: string;
-  contractAddress: string;
+  networkId: string;
   symbol: string;
   name: string;
+  contractAddress: string;
   decimals: number;
-  networkId: string;
-  addedAt: number;
+  balance?: string;
+  addedAt?: number;
 }
 
 export interface WatchlistEntry {
@@ -33,134 +35,320 @@ export interface WatchlistEntry {
 
 export interface TransactionRecord {
   id: string;
-  recipient: string;
-  amount: string;
-  token: string;
-  networkId: string;
-  status: 'pending' | 'confirmed' | 'failed';
   timestamp: number;
+  network: string;
+  networkId: string;
+  from: string;
+  to: string;
+  // 'recipient' alias kept for backward compat with old records
+  recipient?: string;
+  amount: string;
+  symbol: string;
+  // 'token' alias kept for backward compat with old records
+  token?: string;
+  status: 'pending' | 'confirmed' | 'failed' | 'success';
+  txHash?: string;
   note?: string;
+  tokenSymbol?: string;
+  tokenContractAddress?: string;
+  // ICP address sub-type used in the transaction
+  icpAddressType?: 'icp-native' | 'icp-token';
 }
 
-// Default networks
+export interface WhitelistEntry {
+  id: string;
+  type: 'icp-native' | 'icp-token' | 'evm';
+  address: string;
+  label: string;
+  createdAt: number;
+}
+
+const STORAGE_KEYS = {
+  NETWORKS: 'wallet_networks',
+  TOKENS: 'wallet_tokens',
+  TRANSACTIONS: 'wallet_transactions',
+  WATCHLIST: 'wallet_watchlist',
+  WHITELIST: 'wallet_whitelist',
+};
+
+// Default EVM networks
 export const DEFAULT_NETWORKS: NetworkConfig[] = [
   {
     id: 'icp',
     name: 'Internet Computer',
+    type: 'ICP',
     symbol: 'ICP',
-    rpcUrl: 'https://ic0.app',
     explorerUrl: 'https://dashboard.internetcomputer.org',
-    isCustomRpc: false,
     color: '#29ABE2',
     icon: '∞',
+    rpcUrl: 'https://ic0.app',
+    isCustomRpc: false,
   },
   {
     id: 'ethereum',
     name: 'Ethereum',
-    symbol: 'ETH',
-    rpcUrl: 'https://mainnet.infura.io/v3/your-key',
-    explorerUrl: 'https://etherscan.io',
+    type: 'EVM',
     chainId: 1,
-    isCustomRpc: false,
+    symbol: 'ETH',
+    explorerUrl: 'https://etherscan.io',
     color: '#627EEA',
     icon: 'Ξ',
-  },
-  {
-    id: 'polygon',
-    name: 'Polygon',
-    symbol: 'MATIC',
-    rpcUrl: 'https://polygon-rpc.com',
-    explorerUrl: 'https://polygonscan.com',
-    chainId: 137,
+    rpcUrl: 'https://mainnet.infura.io/v3/your-key',
     isCustomRpc: false,
-    color: '#8247E5',
-    icon: '⬡',
   },
   {
     id: 'bsc',
     name: 'BNB Smart Chain',
-    symbol: 'BNB',
-    rpcUrl: 'https://bsc-dataseed.binance.org',
-    explorerUrl: 'https://bscscan.com',
+    type: 'EVM',
     chainId: 56,
-    isCustomRpc: false,
+    symbol: 'BNB',
+    explorerUrl: 'https://bscscan.com',
     color: '#F3BA2F',
     icon: '◈',
+    rpcUrl: 'https://bsc-dataseed.binance.org',
+    isCustomRpc: false,
+  },
+  {
+    id: 'polygon',
+    name: 'Polygon',
+    type: 'EVM',
+    chainId: 137,
+    symbol: 'MATIC',
+    explorerUrl: 'https://polygonscan.com',
+    color: '#8247E5',
+    icon: '⬡',
+    rpcUrl: 'https://polygon-rpc.com',
+    isCustomRpc: false,
+  },
+  {
+    id: 'arbitrum',
+    name: 'Arbitrum One',
+    type: 'EVM',
+    chainId: 42161,
+    symbol: 'ETH',
+    explorerUrl: 'https://arbiscan.io',
+    color: '#28A0F0',
+    icon: '◎',
+    rpcUrl: 'https://arb1.arbitrum.io/rpc',
+    isCustomRpc: false,
   },
 ];
 
-function storageKey(principal: string, ns: string) {
-  return `wallet_${principal}_${ns}`;
+// ─── Address Validation ───────────────────────────────────────────────────────
+
+/** ICP Native Account ID: exactly 64 hex characters */
+export function validateIcpNativeAddress(address: string): boolean {
+  return /^[a-fA-F0-9]{64}$/.test(address.trim());
 }
 
-// Networks
-export function loadNetworks(principal: string): NetworkConfig[] {
+/** ICP Token Principal ID: groups of alphanumeric chars separated by hyphens (e.g. xxxxx-xxxxx-...) */
+export function validateIcpTokenAddress(address: string): boolean {
+  return /^[a-z0-9]{5}(-[a-z0-9]{5})+(-[a-z0-9]{3})?$/.test(address.trim());
+}
+
+/** EVM address: 0x followed by exactly 40 hex characters */
+export function validateEvmAddress(address: string): boolean {
+  return /^0x[a-fA-F0-9]{40}$/.test(address.trim());
+}
+
+// ─── Whitelist Migration ──────────────────────────────────────────────────────
+
+/**
+ * Migrates legacy 'icp' type entries in localStorage to 'icp-native'.
+ * Should be called once on app startup.
+ */
+export function migrateWhitelistEntries(): void {
   try {
-    const raw = localStorage.getItem(storageKey(principal, 'networks'));
-    return raw ? JSON.parse(raw) : DEFAULT_NETWORKS;
+    const stored = localStorage.getItem(STORAGE_KEYS.WHITELIST);
+    if (!stored) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const entries: any[] = JSON.parse(stored);
+    let changed = false;
+    const migrated = entries.map((e) => {
+      if (e.type === 'icp') {
+        changed = true;
+        return { ...e, type: 'icp-native' };
+      }
+      return e;
+    });
+    if (changed) {
+      localStorage.setItem(STORAGE_KEYS.WHITELIST, JSON.stringify(migrated));
+    }
   } catch {
-    return DEFAULT_NETWORKS;
+    // ignore
   }
 }
 
-export function saveNetworks(principal: string, networks: NetworkConfig[]) {
-  localStorage.setItem(storageKey(principal, 'networks'), JSON.stringify(networks));
+// ─── Networks ────────────────────────────────────────────────────────────────
+
+export function getNetworks(): NetworkConfig[] {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.NETWORKS);
+    if (stored) return JSON.parse(stored);
+  } catch {
+    // ignore
+  }
+  return DEFAULT_NETWORKS;
 }
 
-// Tokens
-export function loadTokens(principal: string): TokenConfig[] {
+export function saveNetworks(networks: NetworkConfig[]): void {
+  localStorage.setItem(STORAGE_KEYS.NETWORKS, JSON.stringify(networks));
+}
+
+/** @deprecated Use getNetworks() */
+export function loadNetworks(_principal?: string): NetworkConfig[] {
+  return getNetworks();
+}
+
+// ─── Tokens ──────────────────────────────────────────────────────────────────
+
+export function getTokens(): TokenConfig[] {
   try {
-    const raw = localStorage.getItem(storageKey(principal, 'tokens'));
-    return raw ? JSON.parse(raw) : [];
+    const stored = localStorage.getItem(STORAGE_KEYS.TOKENS);
+    if (stored) return JSON.parse(stored);
   } catch {
-    return [];
+    // ignore
+  }
+  return [];
+}
+
+export function saveTokens(tokens: TokenConfig[]): void {
+  localStorage.setItem(STORAGE_KEYS.TOKENS, JSON.stringify(tokens));
+}
+
+export function getTokensByNetwork(networkId: string): TokenConfig[] {
+  return getTokens().filter((t) => t.networkId === networkId);
+}
+
+export function setTokenBalance(tokenId: string, balance: string): void {
+  const tokens = getTokens();
+  const idx = tokens.findIndex((t) => t.id === tokenId);
+  if (idx !== -1) {
+    tokens[idx] = { ...tokens[idx], balance };
+    saveTokens(tokens);
   }
 }
 
-export function saveTokens(principal: string, tokens: TokenConfig[]) {
-  localStorage.setItem(storageKey(principal, 'tokens'), JSON.stringify(tokens));
+export function getTokenBalance(tokenId: string): string {
+  const token = getTokens().find((t) => t.id === tokenId);
+  return token?.balance ?? '0';
 }
 
-// Watchlist
-export function loadWatchlist(principal: string): WatchlistEntry[] {
+/** @deprecated Use getTokens() */
+export function loadTokens(_principal?: string): TokenConfig[] {
+  return getTokens();
+}
+
+// ─── Watchlist ────────────────────────────────────────────────────────────────
+
+export function getWatchlist(): WatchlistEntry[] {
   try {
-    const raw = localStorage.getItem(storageKey(principal, 'watchlist'));
-    return raw ? JSON.parse(raw) : [];
+    const stored = localStorage.getItem(STORAGE_KEYS.WATCHLIST);
+    if (stored) return JSON.parse(stored);
   } catch {
-    return [];
+    // ignore
+  }
+  return [];
+}
+
+export function saveWatchlistEntries(entries: WatchlistEntry[]): void {
+  localStorage.setItem(STORAGE_KEYS.WATCHLIST, JSON.stringify(entries));
+}
+
+/** @deprecated Use getWatchlist() */
+export function loadWatchlist(_principal?: string): WatchlistEntry[] {
+  return getWatchlist();
+}
+
+/** @deprecated Use saveWatchlistEntries() */
+export function saveWatchlist(_principal: string, entries: WatchlistEntry[]): void {
+  saveWatchlistEntries(entries);
+}
+
+// ─── Transactions ─────────────────────────────────────────────────────────────
+
+export function getTransactions(): TransactionRecord[] {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.TRANSACTIONS);
+    if (stored) return JSON.parse(stored);
+  } catch {
+    // ignore
+  }
+  return [];
+}
+
+export function saveTransaction(tx: TransactionRecord): void {
+  const txs = getTransactions();
+  txs.unshift(tx);
+  localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(txs));
+}
+
+export function saveTransactions(_principal: string, txs: TransactionRecord[]): void {
+  localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(txs));
+}
+
+export function loadTransactions(_principal?: string): TransactionRecord[] {
+  return getTransactions();
+}
+
+export function deleteTransaction(id: string): void {
+  const txs = getTransactions().filter((t) => t.id !== id);
+  localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(txs));
+}
+
+export function clearTransactions(): void {
+  localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify([]));
+}
+
+// ─── Whitelist ────────────────────────────────────────────────────────────────
+
+export function getWhitelistEntries(): WhitelistEntry[] {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.WHITELIST);
+    if (stored) return JSON.parse(stored);
+  } catch {
+    // ignore
+  }
+  return [];
+}
+
+export function addWhitelistEntry(entry: Omit<WhitelistEntry, 'id' | 'createdAt'>): WhitelistEntry {
+  const entries = getWhitelistEntries();
+  const newEntry: WhitelistEntry = {
+    ...entry,
+    id: generateId(),
+    createdAt: Date.now(),
+  };
+  entries.push(newEntry);
+  localStorage.setItem(STORAGE_KEYS.WHITELIST, JSON.stringify(entries));
+  return newEntry;
+}
+
+export function updateWhitelistEntry(id: string, updates: Partial<Omit<WhitelistEntry, 'id' | 'createdAt'>>): void {
+  const entries = getWhitelistEntries();
+  const idx = entries.findIndex((e) => e.id === id);
+  if (idx !== -1) {
+    entries[idx] = { ...entries[idx], ...updates };
+    localStorage.setItem(STORAGE_KEYS.WHITELIST, JSON.stringify(entries));
   }
 }
 
-export function saveWatchlist(principal: string, entries: WatchlistEntry[]) {
-  localStorage.setItem(storageKey(principal, 'watchlist'), JSON.stringify(entries));
+export function deleteWhitelistEntry(id: string): void {
+  const entries = getWhitelistEntries().filter((e) => e.id !== id);
+  localStorage.setItem(STORAGE_KEYS.WHITELIST, JSON.stringify(entries));
 }
 
-// Transactions
-export function loadTransactions(principal: string): TransactionRecord[] {
-  try {
-    const raw = localStorage.getItem(storageKey(principal, 'transactions'));
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-export function saveTransactions(principal: string, txs: TransactionRecord[]) {
-  localStorage.setItem(storageKey(principal, 'transactions'), JSON.stringify(txs));
-}
-
-// Generate a simple unique ID
 export function generateId(): string {
   return `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
-// Format address for display
 export function shortAddress(address: string, chars = 6): string {
   if (!address || address.length <= chars * 2 + 2) return address;
   return `${address.slice(0, chars)}...${address.slice(-chars)}`;
 }
 
-// Format timestamp
 export function formatTimestamp(ts: number): string {
   return new Date(ts).toLocaleString('en-US', {
     month: 'short',

@@ -1,43 +1,32 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-28T07:55:43.388Z",
-  "summary": "The diff implements most of REQ-8 and REQ-9 correctly. The Dashboard shows a 'Your Wallet Addresses' section with ICP and EVM address cards, copy-to-clipboard with toast confirmation, truncated-with-tooltip display, and authentication gating. The Networks page shows per-row derived addresses, and the Send page auto-populates the From address. One notable gap is the ICP address derivation: it returns the principal text directly rather than a proper ICP Account ID. The consistency requirement across pages is met as all three pages use the same utility functions.",
+  "generatedAt": "2026-02-28T09:44:11.148Z",
+  "summary": "The diff modifies backend/main.mo to fix the verifyAndActivateSubscription function and updates frontend hooks for result variant handling. The backend changes include new ICP Ledger type definitions (AccountIdentifier, Tokens, Transfer, Operation, Transaction, Block, QueryBlocksResponse) and descriptive error variants. The frontend useQueries.ts adds a parseVerifyResult helper handling all backend result variants. Most REQ-32 requirements appear addressed, but the diff is truncated so some details cannot be fully confirmed.",
   "missing_requirements": [
     {
-      "id": "REQ-8",
-      "requirement": "The ICP account address must be derived from the authenticated principal as a proper Account ID (principal-based address), not just the principal text itself.",
-      "reason": "The deriveICPAddress function in addressDerivation.ts simply returns the principal text string unchanged, rather than computing a proper ICP Account ID (which involves CRC32 checksum + SHA-224 hashing of the principal bytes into a 32-byte account identifier). The AC specifies 'ICP account address (derived from the authenticated principal)' implying a proper Account ID derivation.",
+      "id": "REQ-32",
+      "requirement": "Verify that the destination account comparison correctly converts the canister's treasury Account ID (derived from the canister's own principal) to the same binary/text format used in the ledger block's `to` field.",
+      "reason": "The diff is truncated and the account ID comparison logic in verifyAndActivateSubscription cannot be confirmed from the visible portion of backend/main.mo. The Operation type definition starts to appear but is cut off before the full function body is visible.",
       "evidence": [
-        "frontend/src/utils/addressDerivation.ts"
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "requirement": "Unauthenticated users see the login prompt on the Dashboard.",
-      "reason": "The Dashboard header always shows a 'Connected' green badge regardless of authentication state, and there is no login prompt rendered when isAuthenticated is false. The wallet addresses section is correctly hidden, but no login prompt is shown for unauthenticated users.",
-      "evidence": [
-        "frontend/src/pages/DashboardPage.tsx"
+        "backend/main.mo"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Transaction history recording via localStorage on the Send page, including a TransactionRecord interface and localStorage persistence logic.",
-      "reason": "The build request for REQ-8 and REQ-9 only asks for address derivation, display, and pre-population. Saving transaction records to localStorage was not requested in these requirements.",
+      "description": "Frontend useQueries.ts adds a useVerifyAndActivateSubscription mutation with a parseVerifyResult helper that handles an 'exceedsMaximumSubscriptionTime' result variant.",
+      "reason": "The 'exceedsMaximumSubscriptionTime' variant was not mentioned in REQ-32 or its acceptance criteria. The build request only specifies: 'Block not found', 'Transfer amount insufficient', 'Wrong destination address', 'Subscription already active'. Additionally, frontend changes are explicitly listed as a non-goal in the build request.",
       "evidence": [
-        "frontend/src/pages/SendPage.tsx"
+        "frontend/src/hooks/useQueries.ts"
       ]
     }
   ],
-  "confidence": 0.82,
+  "confidence": 0.62,
   "changed_files": [
+    "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/WalletAddressCard.tsx",
-    "frontend/src/pages/DashboardPage.tsx",
-    "frontend/src/pages/NetworksPage.tsx",
-    "frontend/src/pages/SendPage.tsx",
-    "frontend/src/utils/addressDerivation.ts",
+    "frontend/src/hooks/useQueries.ts",
     "project_state.json"
   ]
 }

@@ -1,60 +1,42 @@
 {
   "kind": "build_request",
-  "title": "Display user's own ICP and EVM wallet addresses after login",
-  "projectName": "NexWallet",
-  "priority": "normal",
+  "title": "Fix verifyAndActivateSubscription block parsing logic in backend",
+  "priority": "high",
   "requirements": [
     {
-      "id": "REQ-8",
-      "text": "After a user logs in via Internet Identity, derive and display their ICP account address (Account ID / principal-based address) and a deterministic EVM-compatible wallet address (derived from the user's principal). Show both addresses prominently on the Dashboard page in clearly labeled cards with copy-to-clipboard buttons, so the user knows where to receive tokens.",
-      "target": "frontend",
+      "id": "REQ-32",
+      "text": "Fix the `verifyAndActivateSubscription` function in `backend/main.mo` so that it correctly detects and validates ICP transfer operations in a given block. The current implementation returns 'Block does not contain a transfer operation' even when a valid ICP transfer exists in the block. Specifically: (1) Review the ICP Ledger `query_blocks` response structure and ensure the block's transaction type field is accessed by the correct field name — the ICP Ledger returns blocks with a `transaction` field containing an `operation` variant that may be `#Transfer`, `#Mint`, `#Burn`, or `#Approve`; the code must match the exact Motoko variant tag used in the decoded response. (2) Ensure the inter-canister call to the ICP Ledger canister (`ryjl3-tyaaa-aaaaa-aaaba-cai`) uses the correct method (`query_blocks`) and the request/response types are fully and correctly typed in the Motoko actor type definition — missing or misnamed fields in the type annotation cause silent decoding failures that make operation fields appear absent. (3) Verify that the destination account comparison correctly converts the canister's treasury Account ID (derived from the canister's own principal) to the same binary/text format used in the ledger block's `to` field. (4) Confirm the amount threshold check uses `>= 100_000` e8s (0.001 ICP). (5) Add descriptive error variants so failures return meaningful messages such as 'Block not found', 'Transfer amount insufficient', 'Wrong destination address', or 'Already subscribed' instead of the generic 'Block does not contain a transfer operation'.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-recent"
         ],
         "quotes": [
-          "id登录后可以查看自己的icp和evm钱包地址，保证可以接收和发送代币"
+          "Block does not contain a transfer operation.",
+          "说明验证时有问题，并没有检测到转账交易"
         ]
       },
       "acceptanceCriteria": [
-        "After logging in with Internet Identity, the Dashboard displays a dedicated 'Your Wallet Addresses' section.",
-        "The ICP account address (derived from the authenticated principal) is displayed with a 'ICP Address' label and a copy-to-clipboard button.",
-        "An EVM-compatible address (deterministically derived from the principal, e.g., by hashing the principal bytes and taking the last 20 bytes as a 0x-prefixed hex string) is displayed with an 'EVM Address' label and a copy-to-clipboard button.",
-        "Both addresses are displayed in full or with a truncated-with-tooltip format for readability.",
-        "Clicking the copy button copies the full address to clipboard and shows a brief confirmation toast.",
-        "The section is only visible when the user is authenticated; unauthenticated users see the login prompt.",
-        "The addresses are consistent across page reloads for the same logged-in principal."
-      ]
-    },
-    {
-      "id": "REQ-9",
-      "text": "Pre-populate the 'Send' form's sender address fields and the Networks page's associated address column with the user's derived ICP and EVM addresses so they are consistently used across the app as the user's own send-from addresses.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-4"
-        ],
-        "quotes": [
-          "保证可以接收和发送代币"
-        ]
-      },
-      "acceptanceCriteria": [
-        "On the Networks page, the user's ICP address is shown as the associated address for ICP/Internet Computer network rows, and the EVM address is shown for Ethereum/EVM network rows.",
-        "On the Send page, the 'From' address is automatically populated with the corresponding derived address based on the selected network/chain.",
-        "The derived addresses displayed in all locations are identical to those shown on the Dashboard's 'Your Wallet Addresses' section."
+        "After a user sends exactly 0.001 ICP (100,000 e8s) to the treasury address and obtains the block index, calling `verifyAndActivateSubscription(blockIndex)` with that block index succeeds and marks the subscription as active.",
+        "The function correctly identifies a `#Transfer` operation in the ICP Ledger block response without returning 'Block does not contain a transfer operation'.",
+        "The ICP Ledger inter-canister type definition in main.mo includes all required fields for the `QueryBlocksResponse`, `Block`, `Transaction`, and `Operation` types with correct Motoko field names.",
+        "The treasury account ID comparison in the verification logic uses a consistent format matching what the ICP Ledger stores as the `to` field.",
+        "Amount check verifies the transfer amount is >= 100,000 e8s before marking the subscription active.",
+        "Failure cases return descriptive error strings: 'Block not found', 'Transfer amount insufficient', 'Wrong destination address', 'Subscription already active'.",
+        "Existing `recordPayment` function is not broken by this change."
       ]
     }
   ],
   "constraints": [
-    "Do not modify any files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui.",
-    "Address derivation must be purely client-side using the authenticated principal — no external RPC or blockchain call is required for address generation.",
-    "EVM address derivation must be deterministic and reproducible from the same principal."
+    "Do not change the subscription fee threshold — it must remain 100,000 e8s (0.001 ICP).",
+    "Do not modify any frontend immutable paths.",
+    "The ICP Ledger canister ID must remain `ryjl3-tyaaa-aaaaa-aaaba-cai`.",
+    "The existing `recordPayment` function must be preserved for backward compatibility."
   ],
   "nonGoals": [
-    "Actual on-chain signing or broadcasting of transactions.",
-    "Fetching live token balances from RPC endpoints.",
-    "Generating new private keys or mnemonics for users.",
-    "Integrating MetaMask or any external wallet provider."
+    "Do not change any frontend UI components or pages as part of this fix.",
+    "Do not implement a new subscription flow or change the Plan A UX.",
+    "Do not add new backend functions unrelated to the block verification fix."
   ],
   "imageRequirements": {
     "required": [],
