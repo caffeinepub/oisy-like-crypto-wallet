@@ -1,18 +1,18 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-28T10:52:45.025Z",
+  "generatedAt": "2026-03-02T08:14:19.858Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 1,
-    "implemented": 1,
+    "total": 3,
+    "implemented": 2,
     "items": [
       {
-        "id": "REQ-35",
-        "summary": "In frontend/src/pages/SubscriptionPage.tsx, update the Block Index input field so that its label, placeholder, and helper text clearly read 'The index of the transaction in the ICP ledger.' (or equivalent user-friendly wording derived from that phrase). Replace any label text that previously said 'Block Index' with this descriptive label so users understand exactly what value to enter after completing their ICP transfer.",
+        "id": "REQ-36",
+        "summary": "Update frontend/src/pages/SubscriptionPage.tsx to replace the entire ICP Ledger block-verification flow with an invite code authentication UI. The page must: (1) display a heading such as 'Enter Invite Code' with a brief description telling the user to enter their invite code to unlock the wallet; (2) render a single text input field labeled 'Invite Code'; (3) include an 'Activate' button that is enabled only when the input is non-empty; (4) when the button is clicked, compare the trimmed input value against the hardcoded string '156853c40cb612680accef359c70d569cc9cd60453f5b055bf69e4ce87cf67a5' entirely on the frontend — no backend call required for validation; (5) if the code matches, call the backend `recordPayment` (or equivalent) function to mark the current user's subscription as active, then invalidate the `isSubscribed` React Query cache key so App.tsx immediately recognises the active subscription and redirects to the dashboard; (6) if the code does not match, display a clear inline error message such as 'Invalid invite code. Please check and try again.'; (7) if the user is already subscribed (active), skip the form and show an 'Active Subscription' badge; (8) remove all references to treasury address, ICP transfer instructions, block index input, and 'Verify & Activate' button — they must no longer appear on this page. Match the existing dark fintech glassmorphism visual theme.",
         "status": "implemented",
         "plannedFiles": [
           "frontend/src/pages/SubscriptionPage.tsx"
@@ -20,14 +20,38 @@
         "matchedFiles": [
           "frontend/src/pages/SubscriptionPage.tsx"
         ]
+      },
+      {
+        "id": "REQ-37",
+        "summary": "Update the backend Motoko actor in backend/main.mo so that the `recordPayment` function accepts a call from the authenticated principal and marks their subscription as 'active' immediately, without requiring a minimum payment amount check. This allows the frontend invite-code flow to activate the subscription by calling `recordPayment` with a nominal amount (e.g. 0) after the invite code is locally validated. Ensure the `isSubscribed` query still returns `true` for principals whose subscription status is 'active'.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-38",
+        "summary": "Update the `useVerifyAndActivateSubscription` mutation hook in frontend/src/hooks/useQueries.ts (or add a new `useActivateByInviteCode` mutation hook) so that SubscriptionPage.tsx can call it to trigger backend subscription activation after a successful local invite code match. The hook must: obtain the backend actor via `useActor`; call the backend activation function (e.g. `recordPayment` with amount 0n); on success, invalidate the `isSubscribed` React Query cache key; expose `isPending`, `isSuccess`, and `isError` states for the UI to reflect loading and result feedback.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/hooks/useQueries.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useQueries.ts"
+        ]
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useQueries.ts",
     "frontend/src/pages/SubscriptionPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",

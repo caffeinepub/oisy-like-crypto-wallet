@@ -83,7 +83,7 @@ export const idlService = IDL.Service({
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'isSubscribed' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
-  'recordPayment' : IDL.Func([IDL.Principal, IDL.Nat], [Result], []),
+  'recordPayment' : IDL.Func([], [Result], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'verifyAndActivateSubscription' : IDL.Func(
       [IDL.Nat],
@@ -177,7 +177,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isSubscribed' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
-    'recordPayment' : IDL.Func([IDL.Principal, IDL.Nat], [Result], []),
+    'recordPayment' : IDL.Func([], [Result], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'verifyAndActivateSubscription' : IDL.Func(
         [IDL.Nat],

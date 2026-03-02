@@ -78,22 +78,21 @@ actor {
     };
   };
 
-  // Admin-only: called after an on-chain ICP transfer is verified.
-  public shared ({ caller }) func recordPayment(principal : Principal, amount : Nat) : async Result {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only admins can record payments.");
+  // Authenticated: called after invite code is validated and user registers.
+  // Called after an on-chain ICP transfer is validated by an admin.
+  public shared ({ caller }) func recordPayment() : async Result {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+      Runtime.trap("Unauthorized: Only registered users can use an invite code.");
     };
-
-    let status = if (amount >= fullSubscriptionAmount) { #active } else { #pending };
 
     let record : SubscriptionRecord = {
-      principalId = principal.toText();
-      paidAmount = amount;
+      principalId = caller.toText();
+      paidAmount = 0; // Invite code flow, no ICP transferred
       paidAt = Time.now();
-      status;
+      status = #active;
     };
 
-    subscriptions.add(principal, record);
+    subscriptions.add(caller, record);
     #ok(record);
   };
 

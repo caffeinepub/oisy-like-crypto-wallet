@@ -60,7 +60,7 @@ export interface _SERVICE {
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isSubscribed' : ActorMethod<[Principal], boolean>,
-  'recordPayment' : ActorMethod<[Principal, bigint], Result>,
+  'recordPayment' : ActorMethod<[], Result>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'verifyAndActivateSubscription' : ActorMethod<
     [bigint],

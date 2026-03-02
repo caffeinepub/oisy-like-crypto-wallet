@@ -1,23 +1,44 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Update subscription verification UI to clarify Block Index input label",
+  "title": "Replace Subscription flow with invite code authentication",
   "requirements": [
     {
-      "id": "REQ-35",
-      "summary": "Update the Block Index input field label, placeholder, and helper text in SubscriptionPage.tsx to clearly explain that users should enter 'The index of the transaction in the ICP ledger' from their wallet transaction history, replacing the previous 'Block Index' label with user-friendly descriptive text.",
+      "id": "REQ-36",
+      "summary": "Replace ICP Ledger verification flow with invite code authentication UI in SubscriptionPage",
       "acceptanceCriteria": [
-        "The Block Index input field on SubscriptionPage.tsx displays the label text 'The index of the transaction in the ICP ledger.' (or a clearly derived equivalent such as 'Transaction Index in ICP Ledger').",
-        "Any previous plain 'Block Index' label text is replaced with the new descriptive label.",
-        "Helper text or a tooltip beneath the input clarifies that this value can be found in the user's ICP wallet transaction history (e.g. NNS App, ICP Dashboard).",
-        "The input still accepts a numeric value (the transaction/block index), and the 'Verify & Activate' button behavior is unchanged.",
-        "The visual style matches the existing dark fintech glassmorphism theme."
+        "The Subscription page shows an 'Enter Invite Code' heading and a single invite code text input.",
+        "The 'Activate' button is disabled when the input is empty and enabled when non-empty.",
+        "Entering exactly '156853c40cb612680accef359c70d569cc9cd60453f5b055bf69e4ce87cf67a5' and clicking 'Activate' triggers the backend subscription activation call.",
+        "After successful activation, the isSubscribed React Query cache is invalidated and the user is redirected to the dashboard.",
+        "Entering any other string displays an inline error: 'Invalid invite code. Please check and try again.'",
+        "No treasury address, ICP transfer instructions, block index input, or 'Verify & Activate' button appears anywhere on the page.",
+        "If the user is already subscribed, the form is hidden and an 'Active Subscription' badge is displayed.",
+        "The page visual style matches the existing dark fintech glassmorphism theme."
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/SubscriptionPage.tsx",
           "operation": "modify",
-          "description": "Update the Block Index input field in the subscription verification section: Replace the label from 'Block Index' to 'Transaction Index in ICP Ledger' or 'The index of the transaction in the ICP ledger.'; update the placeholder text to guide users (e.g., 'Enter transaction index from your ICP wallet'); add or update helper text below the input explaining where to find this value (e.g., 'Find this in your ICP wallet transaction history (NNS App, ICP Dashboard, etc.)'). Ensure the input still accepts numeric values and the 'Verify & Activate' button behavior remains unchanged. Maintain the existing dark fintech glassmorphism styling and card layout."
+          "description": "Replace the entire ICP Ledger block-verification UI with an invite code authentication form. Remove all treasury address display, ICP transfer instructions, block index input field, and 'Verify & Activate' button. Implement: (1) 'Enter Invite Code' heading with instructional text; (2) single text input labeled 'Invite Code'; (3) 'Activate' button enabled only when input is non-empty; (4) local validation comparing trimmed input against hardcoded string '156853c40cb612680accef359c70d569cc9cd60453f5b055bf69e4ce87cf67a5'; (5) on match, call the activation mutation hook (from REQ-38) to trigger backend recordPayment, then invalidate isSubscribed cache and redirect to dashboard; (6) on mismatch, display inline error 'Invalid invite code. Please check and try again.'; (7) if already subscribed, hide form and show 'Active Subscription' badge. Maintain existing dark glassmorphism visual theme using GlassCard and existing CSS classes."
+        }
+      ]
+    },
+    {
+      "id": "REQ-38",
+      "summary": "Add activation mutation hook for invite-code-triggered subscription activation",
+      "acceptanceCriteria": [
+        "A mutation hook is available in useQueries.ts for SubscriptionPage to call after local invite code validation.",
+        "The hook calls the backend actor's subscription activation function.",
+        "On success, the `isSubscribed` query cache is invalidated.",
+        "`isPending`, `isSuccess`, and `isError` states are correctly exposed to the consumer.",
+        "If the actor is not available, the hook returns an appropriate error rather than silently failing."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Add a new mutation hook `useActivateByInviteCode` that: (1) obtains the backend actor via useActor; (2) calls actor.recordPayment() with no arguments (the backend will accept this as a subscription activation signal); (3) on success, invalidates the 'isSubscribed' React Query cache key to trigger App.tsx subscription re-check and automatic redirect to dashboard; (4) exposes isPending, isSuccess, isError, and error states for UI feedback; (5) handles actor unavailability by throwing a descriptive error. This hook replaces the need for useVerifyAndActivateSubscription in the new invite-code flow."
         }
       ]
     }

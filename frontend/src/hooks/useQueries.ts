@@ -83,7 +83,32 @@ export function useRecordPayment() {
   return useMutation({
     mutationFn: async (amount: bigint) => {
       if (!actor || !identity) throw new Error('Actor not available');
-      return actor.recordPayment(identity.getPrincipal(), amount);
+      return actor.recordPayment();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['isSubscribed'] });
+      queryClient.invalidateQueries({ queryKey: ['subscriptionStatus'] });
+    },
+  });
+}
+
+/**
+ * Activate subscription via invite code.
+ * The invite code is validated on the frontend only; this hook calls
+ * actor.recordPayment() to register the subscription on-chain.
+ */
+export function useActivateByInviteCode() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error('Actor not available. Please make sure you are logged in.');
+      const result = await actor.recordPayment();
+      if (result.__kind__ === 'error') {
+        throw new Error(result.error);
+      }
+      return result.ok;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['isSubscribed'] });

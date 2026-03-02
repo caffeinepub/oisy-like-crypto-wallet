@@ -43,7 +43,7 @@ export interface backendInterface {
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     isSubscribed(principal: Principal): Promise<boolean>;
-    recordPayment(principal: Principal, amount: bigint): Promise<Result>;
+    recordPayment(): Promise<Result>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     verifyAndActivateSubscription(blockIndex: bigint): Promise<{
         __kind__: "ok";

@@ -1,16 +1,15 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 23,
-  "summary": "Building a crypto wallet DApp similar to Oisy Wallet on Internet Computer, with Internet Identity authentication, multi-chain asset viewing, ERC20 token management, address monitoring, real-time balance queries, a whitelist address book, and a transparent paid subscription/access-control system using ICP smart contracts. Also distinguishing ICP native addresses (Account ID) from ICP contract token addresses (Principal ID). Subscription fee is 0.001 ICP. Subscription verification uses Plan A: user manually transfers ICP via external wallet, enters the Block Index on the subscription page, and the backend verifies the block against ICP Ledger to activate the subscription.",
+  "projectStateVersion": 25,
+  "summary": "Building a crypto wallet DApp similar to Oisy Wallet on Internet Computer, with Internet Identity authentication, multi-chain asset viewing, ERC20 token management, address monitoring, real-time balance queries, a whitelist address book, and a transparent paid subscription/access-control system using ICP smart contracts. Also distinguishing ICP native addresses (Account ID) from ICP contract token addresses (Principal ID). The subscription/access flow has been changed from ICP Ledger block verification to an invite code system: the user enters an invite code on the Subscription page, and if it matches the hardcoded string '156853c40cb612680accef359c70d569cc9cd60453f5b055bf69e4ce87cf67a5', access is granted.",
   "architectural_notes": [
     "基于 Internet Computer (ICP) 区块链平台构建全栈 DApp",
     "使用 Internet Identity 作为身份认证系统",
     "收费访问控制通过 ICP Canister 智能合约实现，收费记录上链透明可查，前端在验证付款状态后解锁功能",
-    "订阅付款采用方案A：用户通过外部 ICP 钱包手动转账，在前端输入 Block Index，后端调用 ICP Ledger Canister 查询并验证区块后激活订阅"
+    "订阅验证方式已改为邀请码认证：用户在 Subscription 页面输入邀请码，与硬编码字符串 '156853c40cb612680accef359c70d569cc9cd60453f5b055bf69e4ce87cf67a5' 匹配即激活订阅，不再使用 ICP Ledger 区块验证"
   ],
   "known_issues": [
-    "Internet Identity 登录账户无法从前端直接发起 ICP Ledger 转账，需要用户通过外部钱包（如 NNS App）完成链上转账",
-    "`verifyAndActivateSubscription` returns 'Block does not contain a transfer operation' even when user has completed a valid ICP transfer to the treasury address — block parsing logic in backend/main.mo is not correctly detecting transfer operations"
+    "Internet Identity 登录账户无法从前端直接发起 ICP Ledger 转账，需要用户通过外部钱包（如 NNS App）完成链上转账"
   ],
   "isFixRequest": false,
   "existing_features": [
@@ -245,6 +244,22 @@
         "REQ-35"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-update-frontend-src-pages-subscriptionpage-tsx-to-replace-the-entire-icp-ledger-block-verification-flow-with-an-invite-code-authentication-ui-the-page-must-1-display-a-heading-such-as-enter-invite-code-with-a-brief-description-telling-the-user-to-enter-their-invite-code-to-unlock-the-wallet-2-render-a-single-text-input-field-labeled-invite-code-3-include-an-activate-button-that-is-enabled-only-when-the-input-is-non-empty-4-when-the-button-is-clicked-compare-the-trimmed-input-value-against-the-hardcoded-string-156853c40cb612680accef359c70d569cc9cd60453f5b055bf69e4ce87cf67a5-entirely-on-the-frontend-no-backend-call-required-for-validation-5-if-the-code-matches-call-the-backend-recordpayment-or-equivalent-function-to-mark-the-current-user-s-subscription-as-active-then-invalidate-the-issubscribed-react-query-cache-key-so-app-tsx-immediately-recognises-the-active-subscription-and-redirects-to-the-dashboard-6-if-the-code-does-not-match-display-a-clear-inline-error-message-such-as-invalid-invite-code-please-check-and-try-again-7-if-the-user-is-already-subscribed-active-skip-the-form-and-show-an-active-subscription-badge-8-remove-all-references-to-treasury-address-icp-transfer-instructions-block-index-input-and-verify-activate-button-they-must-no-longer-appear-on-this-page-match-the-existing-dark-fintech-glassmorphism-visual-theme",
+      "title": "Update frontend/src/pages/SubscriptionPage.tsx to replace the entire ICP Ledger block-verification flow with an invite code authentication UI. The page must: (1) display a heading such as 'Enter Invite Code' with a brief description telling the user to enter their invite code to unlock the wallet; (2) render a single text input field labeled 'Invite Code'; (3) include an 'Activate' button that is enabled only when the input is non-empty; (4) when the button is clicked, compare the trimmed input value against the hardcoded string '156853c40cb612680accef359c70d569cc9cd60453f5b055bf69e4ce87cf67a5' entirely on the frontend — no backend call required for validation; (5) if the code matches, call the backend `recordPayment` (or equivalent) function to mark the current user's subscription as active, then invalidate the `isSubscribed` React Query cache key so App.tsx immediately recognises the active subscription and redirects to the dashboard; (6) if the code does not match, display a clear inline error message such as 'Invalid invite code. Please check and try again.'; (7) if the user is already subscribed (active), skip the form and show an 'Active Subscription' badge; (8) remove all references to treasury address, ICP transfer instructions, block index input, and 'Verify & Activate' button — they must no longer appear on this page. Match the existing dark fintech glassmorphism visual theme.",
+      "reqIds": [
+        "REQ-36"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-useverifyandactivatesubscription-mutation-hook-in-frontend-src-hooks-usequeries-ts-or-add-a-new-useactivatebyinvitecode-mutation-hook-so-that-subscriptionpage-tsx-can-call-it-to-trigger-backend-subscription-activation-after-a-successful-local-invite-code-match-the-hook-must-obtain-the-backend-actor-via-useactor-call-the-backend-activation-function-e-g-recordpayment-with-amount-0n-on-success-invalidate-the-issubscribed-react-query-cache-key-expose-ispending-issuccess-and-iserror-states-for-the-ui-to-reflect-loading-and-result-feedback",
+      "title": "Update the `useVerifyAndActivateSubscription` mutation hook in frontend/src/hooks/useQueries.ts (or add a new `useActivateByInviteCode` mutation hook) so that SubscriptionPage.tsx can call it to trigger backend subscription activation after a successful local invite code match. The hook must: obtain the backend actor via `useActor`; call the backend activation function (e.g. `recordPayment` with amount 0n); on success, invalidate the `isSubscribed` React Query cache key; expose `isPending`, `isSuccess`, and `isError` states for the UI to reflect loading and result feedback.",
+      "reqIds": [
+        "REQ-38"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -337,20 +352,6 @@
       "status": "pending"
     },
     {
-      "id": "AR-15",
-      "summary": "Upgrade subscription flow to Plan A: (1) Display the Canister treasury/receiving address on the subscription page; (2) Add a Block Index input field where the user enters the block index of their manual ICP transfer; (3) Update the backend to query ICP Ledger Canister, verify the block contains a transfer of >= 100,000 e8s to the treasury address from the user's account, and mark the subscription as 'active' if valid.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-16",
-      "summary": "Update the backend Motoko actor in backend/main.mo to add an ICP Ledger verification function. Implement a new public function `verifyAndActivateSubscription(blockIndex: Nat) -> async Result<Text, Text>` that: (1) calls the ICP Ledger Canister (mainnet canister ID: `ryjl3-tyaaa-aaaaa-aaaba-cai`) using an inter-canister call to query the block at the given index via the `query_blocks` or `get_blocks` method; (2) verifies that the block contains a transfer operation where the destination account matches the Canister's own treasury account ID, the amount is >= 100,000 e8s (0.001 ICP), and the memo or sender matches the calling principal's account; (3) if valid, marks the caller's subscription status as 'active' with the paid amount and current timestamp; (4) returns an error if the block does not exist, the transfer is invalid, or the subscription is already active. The existing `recordPayment` function may remain for backward compatibility but the new verification path is the primary activation mechanism.",
-      "reqIds": [
-        "REQ-27"
-      ],
-      "status": "pending"
-    },
-    {
       "id": "AR-18",
       "summary": "Audit and fix the `useVerifyAndActivateSubscription` mutation hook in frontend/src/hooks/useQueries.ts to ensure it correctly obtains the backend actor via `useActor`, converts the block index argument to bigint before calling the Candid method, and handles the case where the actor is not yet available (returning an appropriate error rather than silently failing). Confirm that the mutation's `isPending` / `isLoading` state is properly exposed so SubscriptionPage.tsx can reflect it in the button's disabled and loading states.",
       "reqIds": [
@@ -359,30 +360,16 @@
       "status": "pending"
     },
     {
-      "id": "AR-19",
-      "summary": "Fix backend `verifyAndActivateSubscription` in backend/main.mo: the block verification logic fails to detect valid transfer operations, returning 'Block does not contain a transfer operation' even when the user has completed a real ICP transfer. Investigate and fix the block parsing logic — check that the correct transaction type field is being inspected, that the ICP Ledger query method and response structure are correctly decoded, and that the destination account comparison matches the canister's actual treasury Account ID.",
+      "id": "AR-23",
+      "summary": "Replace the Subscription page ICP Ledger block-verification flow with an invite code authentication system. The user enters an invite code; if it matches '156853c40cb612680accef359c70d569cc9cd60453f5b055bf69e4ce87cf67a5', the subscription is activated and the wallet is unlocked. Update both the frontend SubscriptionPage.tsx and the backend activation logic accordingly.",
       "reqIds": [],
       "status": "pending"
     },
     {
-      "id": "AR-20",
-      "summary": "Fix the `verifyAndActivateSubscription` function in `backend/main.mo` so that it correctly detects and validates ICP transfer operations in a given block. The current implementation returns 'Block does not contain a transfer operation' even when a valid ICP transfer exists in the block. Specifically: (1) Review the ICP Ledger `query_blocks` response structure and ensure the block's transaction type field is accessed by the correct field name — the ICP Ledger returns blocks with a `transaction` field containing an `operation` variant that may be `#Transfer`, `#Mint`, `#Burn`, or `#Approve`; the code must match the exact Motoko variant tag used in the decoded response. (2) Ensure the inter-canister call to the ICP Ledger canister (`ryjl3-tyaaa-aaaaa-aaaba-cai`) uses the correct method (`query_blocks`) and the request/response types are fully and correctly typed in the Motoko actor type definition — missing or misnamed fields in the type annotation cause silent decoding failures that make operation fields appear absent. (3) Verify that the destination account comparison correctly converts the canister's treasury Account ID (derived from the canister's own principal) to the same binary/text format used in the ledger block's `to` field. (4) Confirm the amount threshold check uses `>= 100_000` e8s (0.001 ICP). (5) Add descriptive error variants so failures return meaningful messages such as 'Block not found', 'Transfer amount insufficient', 'Wrong destination address', or 'Already subscribed' instead of the generic 'Block does not contain a transfer operation'.",
+      "id": "AR-25",
+      "summary": "Update the backend Motoko actor in backend/main.mo so that the `recordPayment` function accepts a call from the authenticated principal and marks their subscription as 'active' immediately, without requiring a minimum payment amount check. This allows the frontend invite-code flow to activate the subscription by calling `recordPayment` with a nominal amount (e.g. 0) after the invite code is locally validated. Ensure the `isSubscribed` query still returns `true` for principals whose subscription status is 'active'.",
       "reqIds": [
-        "REQ-32"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-21",
-      "summary": "Change the canister treasury address to '156853c40cb612680accef359c70d569cc9cd60453f5b055bf69e4ce87cf67a5' in the backend and frontend subscription page.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-22",
-      "summary": "In backend/main.mo, replace the hardcoded treasury Account ID used in `verifyAndActivateSubscription` (and any other subscription-related functions that reference the treasury address) with the new address: `156853c40cb612680accef359c70d569cc9cd60453f5b055bf69e4ce87cf67a5`. Remove any dynamic derivation of the treasury address from the canister's own principal and use this fixed 64-character hex string as a constant instead.",
-      "reqIds": [
-        "REQ-33"
+        "REQ-37"
       ],
       "status": "pending"
     }

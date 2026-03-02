@@ -1,38 +1,82 @@
 {
   "kind": "build_request",
-  "title": "Update subscription verification UI to clarify Block Index input label",
-  "priority": "normal",
+  "title": "Replace Subscription flow with invite code authentication",
+  "projectName": "Oisy-like Crypto Wallet",
+  "priority": "high",
   "requirements": [
     {
-      "id": "REQ-35",
-      "text": "In frontend/src/pages/SubscriptionPage.tsx, update the Block Index input field so that its label, placeholder, and helper text clearly read 'The index of the transaction in the ICP ledger.' (or equivalent user-friendly wording derived from that phrase). Replace any label text that previously said 'Block Index' with this descriptive label so users understand exactly what value to enter after completing their ICP transfer.",
+      "id": "REQ-36",
+      "text": "Update frontend/src/pages/SubscriptionPage.tsx to replace the entire ICP Ledger block-verification flow with an invite code authentication UI. The page must: (1) display a heading such as 'Enter Invite Code' with a brief description telling the user to enter their invite code to unlock the wallet; (2) render a single text input field labeled 'Invite Code'; (3) include an 'Activate' button that is enabled only when the input is non-empty; (4) when the button is clicked, compare the trimmed input value against the hardcoded string '156853c40cb612680accef359c70d569cc9cd60453f5b055bf69e4ce87cf67a5' entirely on the frontend — no backend call required for validation; (5) if the code matches, call the backend `recordPayment` (or equivalent) function to mark the current user's subscription as active, then invalidate the `isSubscribed` React Query cache key so App.tsx immediately recognises the active subscription and redirects to the dashboard; (6) if the code does not match, display a clear inline error message such as 'Invalid invite code. Please check and try again.'; (7) if the user is already subscribed (active), skip the form and show an 'Active Subscription' badge; (8) remove all references to treasury address, ICP transfer instructions, block index input, and 'Verify & Activate' button — they must no longer appear on this page. Match the existing dark fintech glassmorphism visual theme.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-latest"
+          "msg-recent"
         ],
         "quotes": [
-          "如何改成\"The index of the transaction in the ICP ledger.\"来验证交易",
-          "交易记录里只有The index of the transaction in the ICP ledger."
+          "Subscription页面改成邀请码认证，只要用户邀请码填写时与\"156853c40cb612680accef359c70d569cc9cd60453f5b055bf69e4ce87cf67a5\"一致就验证通过，可以使用该钱包"
         ]
       },
       "acceptanceCriteria": [
-        "The Block Index input field on SubscriptionPage.tsx displays the label text 'The index of the transaction in the ICP ledger.' (or a clearly derived equivalent such as 'Transaction Index in ICP Ledger').",
-        "Any previous plain 'Block Index' label text is replaced with the new descriptive label.",
-        "Helper text or a tooltip beneath the input clarifies that this value can be found in the user's ICP wallet transaction history (e.g. NNS App, ICP Dashboard).",
-        "The input still accepts a numeric value (the transaction/block index), and the 'Verify & Activate' button behavior is unchanged.",
-        "The visual style matches the existing dark fintech glassmorphism theme."
+        "The Subscription page shows an 'Enter Invite Code' heading and a single invite code text input.",
+        "The 'Activate' button is disabled when the input is empty and enabled when non-empty.",
+        "Entering exactly '156853c40cb612680accef359c70d569cc9cd60453f5b055bf69e4ce87cf67a5' and clicking 'Activate' triggers the backend subscription activation call.",
+        "After successful activation, the isSubscribed React Query cache is invalidated and the user is redirected to the dashboard.",
+        "Entering any other string displays an inline error: 'Invalid invite code. Please check and try again.'",
+        "No treasury address, ICP transfer instructions, block index input, or 'Verify & Activate' button appears anywhere on the page.",
+        "If the user is already subscribed, the form is hidden and an 'Active Subscription' badge is displayed.",
+        "The page visual style matches the existing dark fintech glassmorphism theme."
+      ]
+    },
+    {
+      "id": "REQ-37",
+      "text": "Update the backend Motoko actor in backend/main.mo so that the `recordPayment` function accepts a call from the authenticated principal and marks their subscription as 'active' immediately, without requiring a minimum payment amount check. This allows the frontend invite-code flow to activate the subscription by calling `recordPayment` with a nominal amount (e.g. 0) after the invite code is locally validated. Ensure the `isSubscribed` query still returns `true` for principals whose subscription status is 'active'.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-recent"
+        ],
+        "quotes": [
+          "只要用户邀请码填写时与\"156853c40cb612680accef359c70d569cc9cd60453f5b055bf69e4ce87cf67a5\"一致就验证通过，可以使用该钱包"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Calling `recordPayment` from an authenticated principal sets that principal's subscription status to 'active' in stable storage.",
+        "`isSubscribed` returns true for any principal whose subscription status is 'active'.",
+        "No minimum payment amount threshold blocks activation.",
+        "Subscription records survive canister upgrades (stored in stable memory)."
+      ]
+    },
+    {
+      "id": "REQ-38",
+      "text": "Update the `useVerifyAndActivateSubscription` mutation hook in frontend/src/hooks/useQueries.ts (or add a new `useActivateByInviteCode` mutation hook) so that SubscriptionPage.tsx can call it to trigger backend subscription activation after a successful local invite code match. The hook must: obtain the backend actor via `useActor`; call the backend activation function (e.g. `recordPayment` with amount 0n); on success, invalidate the `isSubscribed` React Query cache key; expose `isPending`, `isSuccess`, and `isError` states for the UI to reflect loading and result feedback.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-recent"
+        ],
+        "quotes": [
+          "只要用户邀请码填写时与\"156853c40cb612680accef359c70d569cc9cd60453f5b055bf69e4ce87cf67a5\"一致就验证通过，可以使用该钱包"
+        ]
+      },
+      "acceptanceCriteria": [
+        "A mutation hook is available in useQueries.ts for SubscriptionPage to call after local invite code validation.",
+        "The hook calls the backend actor's subscription activation function.",
+        "On success, the `isSubscribed` query cache is invalidated.",
+        "`isPending`, `isSuccess`, and `isError` states are correctly exposed to the consumer.",
+        "If the actor is not available, the hook returns an appropriate error rather than silently failing."
       ]
     }
   ],
   "constraints": [
-    "Do not change the backend verifyAndActivateSubscription function signature or logic — it still accepts a block index (Nat/bigint).",
-    "Do not modify any immutable frontend paths (useInternetIdentity.ts, useActor.ts, main.tsx, components/ui)."
+    "The invite code '156853c40cb612680accef359c70d569cc9cd60453f5b055bf69e4ce87cf67a5' must be validated entirely on the frontend; no backend function should accept or validate the raw invite code string.",
+    "Do not modify any file listed under frontend.immutablePaths.",
+    "All Motoko logic must remain in the single actor file backend/main.mo."
   ],
   "nonGoals": [
-    "Switching the verification mechanism from block index to transaction hash.",
-    "Changes to the backend Motoko actor.",
-    "Changes to any other pages or components outside SubscriptionPage.tsx."
+    "Implementing any ICP Ledger transfer or block-index verification logic — these flows are being removed.",
+    "Storing or transmitting the invite code string to the backend.",
+    "Adding multiple invite codes or a code management system.",
+    "Changing any other page or component outside of SubscriptionPage.tsx, useQueries.ts, and backend/main.mo."
   ],
   "imageRequirements": {
     "required": [],

@@ -143,7 +143,7 @@ export interface backendInterface {
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     isSubscribed(principal: Principal): Promise<boolean>;
-    recordPayment(principal: Principal, amount: bigint): Promise<Result>;
+    recordPayment(): Promise<Result>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     verifyAndActivateSubscription(blockIndex: bigint): Promise<{
         __kind__: "ok";
@@ -367,17 +367,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async recordPayment(arg0: Principal, arg1: bigint): Promise<Result> {
+    async recordPayment(): Promise<Result> {
         if (this.processError) {
             try {
-                const result = await this.actor.recordPayment(arg0, arg1);
+                const result = await this.actor.recordPayment();
                 return from_candid_Result_n13(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.recordPayment(arg0, arg1);
+            const result = await this.actor.recordPayment();
             return from_candid_Result_n13(this._uploadFile, this._downloadFile, result);
         }
     }
